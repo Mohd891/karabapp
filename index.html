@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>تطبيق كَرَب | iOS</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="كَرَب">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              green: '#12372A',
+              gold: '#C99A3D',
+              goldHover: '#b3862e',
+              beige: '#F3EAD8',
+              beigeLight: '#FAF6EE',
+              card: '#FFFFFF',
+              darkText: '#1A2421'
+            }
+          },
+          fontFamily: {
+            sans: ['Cairo', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #000000;
+      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .iphone-frame {
+      width: 100%;
+      max-width: 412px;
+      height: 100vh;
+      max-height: 870px;
+      background-color: #F3EAD8;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+    @media (min-width: 640px) {
+      .iphone-frame {
+        border-radius: 50px;
+        border: 10px solid #1f2421;
+        height: 844px;
+      }
+    }
+    #map, #farmer-map {
+      height: 240px;
+      width: 100%;
+      border-radius: 1.25rem;
+      z-index: 10;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      font-family: 'Cairo', sans-serif;
+      direction: rtl;
+      text-align: right;
+      font-size: 11px;
+    }
+    .active-tab {
+      color: #C99A3D !important;
+      font-weight: 800;
+    }
+    .active-tab i {
+      transform: scale(1.15);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- iPhone Container -->
+  <div class="iphone-frame">
+
+    <!-- iPhone Dynamic Island & Status Bar -->
+    <div class="pt-2 px-6 flex justify-between items-center bg-brand-green text-brand-beige select-none z-50">
+      <span class="text-xs font-bold tracking-tight">9:41</span>
+      <div class="w-24 h-4 bg-black rounded-full mx-auto"></div>
+      <div class="flex items-center gap-1.5 text-xs">
+        <i class="fa-solid fa-signal text-[10px]"></i>
+        <i class="fa-solid fa-wifi text-[10px]"></i>
+        <i class="fa-solid fa-battery-full text-xs"></i>
+      </div>
+    </div>
+
+    <!-- App Navigation Header -->
+    <header class="bg-brand-green text-brand-beige px-4 py-2.5 shadow flex items-center justify-between z-40 border-b border-brand-gold/30">
+      <div class="flex items-center gap-2 cursor-pointer" onclick="switchAppTab('login')">
+        <div class="w-8 h-8 rounded-full bg-brand-gold flex items-center justify-center text-brand-green font-black text-sm shadow">
+          🌴
+        </div>
+        <div>
+          <h1 class="text-sm font-black text-white leading-tight">تطبيق كَــرَب</h1>
+          <p class="text-[9px] text-brand-beige/80">التدوير الذكي لمخلفات النخيل</p>
+        </div>
+      </div>
+      <button onclick="switchAppTab('login')" class="text-[10px] bg-brand-gold/20 text-brand-beige border border-brand-gold/40 px-2 py-1 rounded-full font-bold">
+        <i class="fa-solid fa-arrow-right-from-bracket ml-1"></i> تبديل الحساب
+      </button>
+    </header>
+
+    <!-- Scrollable Main View Area -->
+    <div class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3.5 pb-20">
+
+      <!-- ========================================== -->
+      <!-- 1. VIEW: LOGIN                             -->
+      <!-- ========================================== -->
+      <section id="view-login" class="bg-white rounded-3xl p-5 custom-shadow border border-brand-green/10 space-y-4 my-auto">
+        <div class="text-center">
+          <div class="w-14 h-14 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-2 border-2 border-brand-gold">
+            <span class="text-2xl">🌴</span>
+          </div>
+          <h2 class="text-lg font-black text-brand-green">تسجيل الدخول إلى كَرَب</h2>
+          <p class="text-[11px] text-gray-500">منظومة جمع وتدوير مخلفات النخيل بالأحساء</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 bg-brand-beige/60 p-1 rounded-2xl">
+          <button id="role-farmer-btn" onclick="selectLoginRole('farmer')" class="py-2 rounded-xl font-bold text-xs text-white bg-brand-green shadow transition">
+            صاحب مزرعة 👨🏽‍🌾
+          </button>
+          <button id="role-factory-btn" onclick="selectLoginRole('factory')" class="py-2 rounded-xl font-bold text-xs text-brand-green hover:bg-brand-beige transition">
+            مصنع تدوير 🏭
+          </button>
+        </div>
+
+        <!-- Farmer Login -->
+        <div id="farmer-login-box" class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 mb-1">رقم الجوال</label>
+            <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden bg-gray-50">
+              <span class="px-2.5 text-xs text-gray-500 font-bold border-l bg-gray-100">🇸🇦 +966</span>
+              <input type="tel" value="501234567" class="w-full px-2.5 py-2 text-xs bg-transparent focus:outline-none font-bold">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 mb-1">رمز التحقق (OTP)</label>
+            <input type="text" value="4829" maxlength="4" class="w-full px-2.5 py-2 border border-gray-300 rounded-xl bg-gray-50 text-xs font-bold text-center tracking-widest focus:outline-none">
+          </div>
+          <button onclick="simulateLogin('farmer')" class="w-full py-2.5 bg-brand-gold text-brand-green font-extrabold text-xs rounded-xl shadow transition">
+            دخول برمز التحقق
+          </button>
+        </div>
+
+        <!-- Factory Login -->
+        <div id="factory-login-box" class="space-y-3 hidden">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 mb-1">رقم السجل التجاري</label>
+            <input type="text" value="2050119842" class="w-full px-2.5 py-2 border border-gray-300 rounded-xl bg-gray-50 text-xs font-bold focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 mb-1">كلمة المرور</label>
+            <input type="password" value="••••••••" class="w-full px-2.5 py-2 border border-gray-300 rounded-xl bg-gray-50 text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-700 mb-1">المصنع المعتمد</label>
+            <select id="login-factory-select" class="w-full px-2 py-2 border border-gray-300 rounded-xl bg-gray-50 text-xs font-bold focus:outline-none">
+              <option value="factory_oyoun">مصنع أسمدة العيون العضوية (العيون)</option>
+              <option value="factory_hofuf">مصنع الواحة لتدوير الكرب والأخشاب (الهفوف)</option>
+            </select>
+          </div>
+          <button onclick="simulateLogin('factory')" class="w-full py-2.5 bg-brand-green text-brand-beige font-extrabold text-xs rounded-xl shadow transition">
+            دخول لوحة التحكم
+          </button>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- 2. VIEW: FARMER APP                        -->
+      <!-- ========================================== -->
+      <section id="view-farmer" class="space-y-3 hidden">
+        <div id="farmer-accepted-notification" class="hidden bg-emerald-50 border border-emerald-400 rounded-2xl p-3 shadow-sm space-y-1">
+          <div class="flex items-center justify-between text-xs font-bold text-emerald-800">
+            <span><i class="fa-solid fa-bell text-brand-gold ml-1"></i> تم قبول طلبك!</span>
+            <span class="text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full font-bold">وصول الشاحنة</span>
+          </div>
+          <p class="text-[11px] text-emerald-900" id="notification-text">قام المصنع بجدولة شاحنته للتوجه إلى مزرعتك.</p>
+          <p class="text-[11px] font-black text-brand-gold" id="notification-eta">⏱️ موعد الوصول المتوقع: 25 دقيقة</p>
+        </div>
+
+        <div class="bg-brand-green text-white p-3.5 rounded-2xl shadow flex items-center justify-between border-b-2 border-brand-gold">
+          <div>
+            <h3 class="text-xs font-bold">مرحباً يا أبو عبد الله 🌴</h3>
+            <p class="text-[10px] text-brand-beige/80">مزرعة نخل القارة - واحة الأحساء</p>
+          </div>
+          <span class="text-[10px] bg-brand-gold text-brand-green font-bold px-2 py-0.5 rounded-full">حساب نشط</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 bg-brand-beige/60 p-1 rounded-xl">
+          <button id="farmer-tab-new" onclick="switchFarmerInnerTab('new')" class="py-2 rounded-lg font-bold text-xs bg-brand-green text-white shadow">
+            طلب جمع جديد ➕
+          </button>
+          <button id="farmer-tab-orders" onclick="switchFarmerInnerTab('orders')" class="py-2 rounded-lg font-bold text-xs text-brand-green">
+            طلباتي الحالية والسابقة 📋
+          </button>
+        </div>
+
+        <div id="farmer-new-request-panel" class="bg-white rounded-2xl p-4 shadow border border-brand-green/10 space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-brand-green mb-1.5">1. تصوير المخلفات بالكاميرا</label>
+            <div id="camera-box" onclick="simulateAICamera()" class="border-2 border-dashed border-brand-gold rounded-xl p-4 bg-brand-beigeLight text-center cursor-pointer active:scale-95 transition">
+              <i class="fa-solid fa-camera text-2xl text-brand-gold mb-1"></i>
+              <p class="font-bold text-brand-green text-xs">اضغط هنا للتصوير</p>
+              <p class="text-[10px] text-gray-500">الذكاء الاصطناعي يحدد النوع والوزن تلقائياً</p>
+            </div>
+          </div>
+
+          <div id="ai-result-card" class="hidden bg-emerald-50 border border-emerald-300 rounded-xl p-2.5 space-y-1 text-xs">
+            <span class="font-bold text-emerald-800 text-[11px]">✓ تحليل الصورة بالذكاء الاصطناعي:</span>
+            <div class="grid grid-cols-2 gap-1.5 text-[11px] pt-0.5">
+              <div class="bg-white p-1.5 rounded-lg border border-emerald-100">
+                <span class="text-gray-400 block text-[9px]">النوع:</span>
+                <strong class="text-brand-green">سعف نخيل طازج</strong>
+              </div>
+              <div class="bg-white p-1.5 rounded-lg border border-emerald-100">
+                <span class="text-gray-400 block text-[9px]">تقدير الوزن:</span>
+                <strong class="text-brand-gold">~3.2 طن</strong>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-brand-green mb-1">2. الوزن التقريبي الحقيقي (اختياري)</label>
+            <input type="number" id="farmer-manual-weight" placeholder="مثال: 4.5 طن (إذا لم تظهر الكمية كاملة بالصورة)" class="w-full px-3 py-2 border border-gray-300 rounded-xl bg-gray-50 text-xs font-semibold focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-brand-green mb-1">3. تحديد موقع البوابة على الخريطة</label>
+            <div id="farmer-map"></div>
+            <p id="selected-coords-text" class="text-[10px] text-gray-500 font-bold mt-1">بوابة طريق القارة الزراعي (25.4150, 49.6920)</p>
+          </div>
+
+          <button onclick="submitFarmerRequest()" class="w-full py-3 bg-brand-gold text-brand-green font-black text-xs rounded-xl shadow active:scale-95 transition">
+            إرسال طلب الجمع لمصانع الأحساء
+          </button>
+        </div>
+
+        <div id="farmer-orders-panel" class="hidden space-y-3">
+          <div class="bg-white rounded-2xl p-3.5 shadow border border-brand-green/10 space-y-2">
+            <div class="flex justify-between items-center border-b pb-1.5">
+              <span class="text-xs font-black text-brand-green">الطلبات الحالية (قيد الانتظار أو القبول)</span>
+              <span id="current-orders-badge" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">1 نشط</span>
+            </div>
+            <div id="current-orders-list" class="space-y-2"></div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-3.5 shadow border border-brand-green/10 space-y-2">
+            <div class="flex justify-between items-center border-b pb-1.5">
+              <span class="text-xs font-black text-brand-green">الطلبات السابقة (المكتملة)</span>
+              <span id="previous-orders-badge" class="text-[10px] bg-gray-100 text-gray-700 font-bold px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="previous-orders-list" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- 3. VIEW: WHATSAPP BOT                      -->
+      <!-- ========================================== -->
+      <section id="view-whatsapp" class="space-y-2.5 hidden">
+        <div class="bg-[#075E54] text-white p-2.5 rounded-2xl flex items-center justify-between shadow">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-brand-gold flex items-center justify-center text-brand-green font-bold text-xs">
+              🌴
+            </div>
+            <div>
+              <h4 class="font-bold text-xs">بوت كَرَب للواتساب</h4>
+              <p class="text-[9px] text-emerald-200">حساب رسمي معتمد • متصل الآن</p>
+            </div>
+          </div>
+          <button onclick="restartWhatsAppDemo()" class="text-[10px] bg-white/20 px-2 py-0.5 rounded">إعادة</button>
+        </div>
+
+        <div id="whatsapp-chat-box" class="bg-[#EFEAE2] p-3 h-[380px] overflow-y-auto rounded-2xl shadow-inner space-y-2.5 text-xs border border-gray-300">
+          <div class="text-center">
+            <span class="bg-[#FFEECD] text-gray-600 text-[9px] px-2.5 py-0.5 rounded shadow-sm">
+              🔒 المحادثة التفاعلية لخدمة كبار السن لرفع الطلب
+            </span>
+          </div>
+        </div>
+
+        <div class="bg-white p-2.5 rounded-2xl border border-gray-200 space-y-1.5">
+          <p id="wa-action-hint" class="text-[10px] text-gray-500 font-bold text-center">ابدأ كصاحب مزرعة:</p>
+          <button id="wa-next-step-btn" onclick="nextWhatsAppStep()" class="w-full py-2 bg-[#25D366] text-white font-bold text-[11px] rounded-xl shadow active:scale-95 transition">
+            إرسال: "السلام عليكم، عندي مخلفات نخل أبي أرفع طلب" 💬
+          </button>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- 4. VIEW: FACTORY & STREET ROUTING          -->
+      <!-- ========================================== -->
+      <section id="view-factory" class="space-y-3.5 hidden">
+        
+        <!-- Factory Header -->
+        <div class="bg-white rounded-2xl p-3 shadow border border-brand-green/10 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-brand-green flex items-center gap-1">
+              <i class="fa-solid fa-industry text-brand-gold"></i> المصنع الحالي:
+            </span>
+            <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">معتمد</span>
+          </div>
+          <select id="factory-location-selector" onchange="changeActiveFactory()" class="w-full text-xs font-bold text-brand-green bg-brand-beige/50 border border-brand-gold/40 rounded-xl px-2 py-1.5 focus:outline-none">
+            <option value="factory_oyoun">مصنع أسمدة العيون (العيون - شمال الأحساء)</option>
+            <option value="factory_hofuf">مصنع الواحة للتدوير (شرق الهفوف)</option>
+          </select>
+          <div class="flex justify-between items-center text-[10px] pt-1">
+            <span class="text-gray-500">سعة حمولة الشاحنة:</span>
+            <span id="truck-capacity-counter" class="font-extrabold text-brand-gold">0 طن / 10 طن</span>
+          </div>
+        </div>
+
+        <!-- Live Street Map -->
+        <div class="bg-white rounded-2xl p-3 shadow border border-brand-green/10 space-y-2">
+          <div class="flex justify-between items-center text-xs font-bold text-brand-green">
+            <span><i class="fa-solid fa-route text-brand-gold ml-1"></i> مسار الشوارع الواقعي (أقصر طريق):</span>
+            <span id="route-stops-count" class="text-[10px] bg-brand-beige px-2 py-0.5 rounded">0 محطات</span>
+          </div>
+          <div id="map"></div>
+
+          <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] pt-1">
+            <div class="bg-brand-beigeLight p-1.5 rounded-lg border border-brand-gold/20">
+              <span class="text-gray-400 block">المسافة</span>
+              <strong id="metric-distance" class="text-brand-green font-bold">0 كم</strong>
+            </div>
+            <div class="bg-brand-beigeLight p-1.5 rounded-lg border border-brand-gold/20">
+              <span class="text-gray-400 block">الزمن</span>
+              <strong id="metric-time" class="text-brand-green font-bold">0 د</strong>
+            </div>
+            <div class="bg-brand-beigeLight p-1.5 rounded-lg border border-brand-gold/20">
+              <span class="text-gray-400 block">توفير الديزل</span>
+              <strong id="metric-fuel" class="text-emerald-700 font-bold">0%</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- FILTER CHIPS (ميزة الفلتر في تطبيق الجوال)  -->
+        <!-- ========================================== -->
+        <div class="bg-white rounded-2xl p-2.5 shadow border border-brand-green/10 space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] font-bold text-brand-green">
+            <span><i class="fa-solid fa-filter text-brand-gold ml-1"></i> فلترة حسب نوع المخلف:</span>
+            <span class="text-[9px] text-gray-400">تصفية سريعة</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <button onclick="filterWasteMobile('all')" id="m-flt-all" class="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-brand-green text-white shadow-sm transition whitespace-nowrap">
+              الكل
+            </button>
+            <button onclick="filterWasteMobile('سعف')" id="m-flt-saaf" class="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 transition whitespace-nowrap">
+              سعف فقط 🌿
+            </button>
+            <button onclick="filterWasteMobile('كرب')" id="m-flt-karab" class="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 transition whitespace-nowrap">
+              كرب وجذوع 🪵
+            </button>
+          </div>
+        </div>
+
+        <!-- Available Farms with Request Timestamp -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center px-1">
+            <span class="text-xs font-extrabold text-brand-green">المزارع المتاحة للجمع (مع وقت الرفع):</span>
+            <span id="available-farms-count" class="text-[10px] text-gray-500">4 مزارع</span>
+          </div>
+          <div id="farms-container" class="space-y-2"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-2 pt-1">
+          <button id="dispatch-btn" disabled onclick="dispatchTruck()" class="w-full py-3 bg-gray-300 text-gray-500 font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-not-allowed">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>قبول الطلبات وإرسال إشعار للمزارع</span>
+          </button>
+          <button id="complete-pickup-btn" disabled onclick="completeCurrentPickups()" class="w-full py-2.5 bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-2 hidden">
+            <i class="fa-solid fa-check-double"></i>
+            <span>تم استلام المخلفات بالكامل (إنهاء)</span>
+          </button>
+        </div>
+
+        <!-- Completed Pickups List -->
+        <div class="bg-white rounded-2xl p-3 shadow border border-brand-green/10 space-y-2">
+          <div class="flex justify-between items-center border-b pb-1">
+            <span class="text-xs font-bold text-brand-green">قائمة المزارع التي تم الاستلام منها:</span>
+            <span id="completed-pickups-badge" class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">0</span>
+          </div>
+          <div id="completed-pickups-list" class="space-y-1.5 text-xs">
+            <p class="text-gray-400 italic text-[10px]">لا توجد شحنات مكتملة حتى الآن.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- 5. VIEW: ESG SUSTAINABILITY REPORT         -->
+      <!-- ========================================== -->
+      <section id="view-report" class="space-y-3.5 hidden">
+        <div class="bg-brand-green text-white p-4 rounded-2xl shadow border-2 border-brand-gold/40 space-y-3">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <div>
+              <h3 class="text-sm font-black text-brand-gold">تقرير خفض الكربون والاستدامة 📄</h3>
+              <p class="text-[10px] text-brand-beige/80">المساهمة البيئية لمصنعك في واحة الأحساء</p>
+            </div>
+            <span class="text-[9px] bg-brand-gold text-brand-green font-bold px-2 py-0.5 rounded-full">معتمد ESG</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-brand-darkText">
+            <div class="bg-white p-2.5 rounded-xl">
+              <span class="text-[10px] text-gray-500 block">خفض انبعاثات الكربون</span>
+              <strong id="kpi-carbon-saved" class="text-sm font-black text-emerald-800">18.4 طن</strong>
+            </div>
+            <div class="bg-white p-2.5 rounded-xl">
+              <span class="text-[10px] text-gray-500 block">مخلفات تم إنقاذها</span>
+              <strong id="kpi-waste-saved" class="text-sm font-black text-brand-gold">13.5 طن</strong>
+            </div>
+            <div class="bg-white p-2.5 rounded-xl">
+              <span class="text-[10px] text-gray-500 block">ديزل موفر بالمسار</span>
+              <strong id="kpi-fuel-saved" class="text-sm font-black text-blue-800">142 لتر</strong>
+            </div>
+            <div class="bg-white p-2.5 rounded-xl">
+              <span class="text-[10px] text-gray-500 block">المكافئ لغرس أشجار</span>
+              <strong id="kpi-trees-equiv" class="text-sm font-black text-brand-green">836 شجرة</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-3.5 shadow border border-brand-green/10 text-xs space-y-2">
+          <h4 class="font-bold text-brand-green">تفاصيل الأثر البيئي المعتمد:</h4>
+          <div class="space-y-1.5 text-[11px] text-gray-700">
+            <p>• <strong>المعيار المطبق:</strong> منع انبعاثات الحرق المكشوف (1.36 طن CO₂e لكل طن سعف).</p>
+            <p>• <strong>النقل الذكي:</strong> تقليل حركة الشاحنات بنسبة 38% داخل الطرق الزراعية.</p>
+            <p>• <strong>التوافق:</strong> يدعم مستهدفات مبادرة السعودية الخضراء لتقليل الانبعاثات والحياد الصفري.</p>
+          </div>
+          <button onclick="alert('✅ تم تصدير تقرير الاستدامة كملف PDF بنجاح!')" class="w-full py-2.5 bg-brand-gold text-brand-green font-black text-xs rounded-xl shadow mt-2">
+            تحميل الشهادة البيئية (PDF) 📥
+          </button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- iPhone Bottom Tab Bar -->
+    <nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-gray-200 pt-2 pb-5 px-4 flex justify-around items-center z-50 shadow-lg">
+      <button onclick="switchAppTab('farmer')" id="tab-farmer" class="flex flex-col items-center gap-0.5 active-tab text-gray-400 text-[10px] font-bold">
+        <i class="fa-solid fa-tractor text-base"></i>
+        <span>المزارع</span>
+      </button>
+      <button onclick="switchAppTab('factory')" id="tab-factory" class="flex flex-col items-center gap-0.5 text-gray-400 text-[10px] font-bold">
+        <i class="fa-solid fa-industry text-base"></i>
+        <span>المصنع</span>
+      </button>
+      <button onclick="switchAppTab('whatsapp')" id="tab-whatsapp" class="flex flex-col items-center gap-0.5 text-gray-400 text-[10px] font-bold">
+        <i class="fa-brands fa-whatsapp text-lg text-green-500"></i>
+        <span>الواتساب</span>
+      </button>
+      <button onclick="switchAppTab('report')" id="tab-report" class="flex flex-col items-center gap-0.5 text-gray-400 text-[10px] font-bold">
+        <i class="fa-solid fa-file-invoice text-base"></i>
+        <span>التقرير</span>
+      </button>
+    </nav>
+
+    <!-- iPhone Home Indicator Bar -->
+    <div class="absolute bottom-1 inset-x-0 flex justify-center z-50 pointer-events-none">
+      <div class="w-32 h-1 bg-black/40 rounded-full"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const factoriesData = {
+      factory_oyoun: {
+        id: 'factory_oyoun',
+        name: 'مصنع أسمدة العيون',
+        locationName: 'مدينة العيون الصناعية (شمال الأحساء)',
+        lat: 25.6020,
+        lng: 49.5650
+      },
+      factory_hofuf: {
+        id: 'factory_hofuf',
+        name: 'مصنع الواحة للتدوير',
+        locationName: 'شرق الهفوف (طريق قطر الزراعي)',
+        lat: 25.3620,
+        lng: 49.6250
+      }
+    };
+
+    let farmsData = [
+      {
+        id: 'farm_1',
+        name: 'مزرعة أبو عبد الله - نخل القارة',
+        location: 'طريق القارة الزراعي، بوابة 2',
+        wasteType: 'سعف',
+        wasteTitle: 'سعف نخيل طازج',
+        weight: 3.4,
+        lat: 25.4150,
+        lng: 49.6920,
+        status: 'pending',
+        acceptedBy: null,
+        eta: null,
+        requestedAtDate: '2026/09/18',
+        requestedAtTime: '08:15 ص'
+      },
+      {
+        id: 'farm_2',
+        name: 'مزرعة أبو فهد - شمال المبرز',
+        location: 'بالقرب من عين النجم، شمال المبرز',
+        wasteType: 'سعف',
+        wasteTitle: 'سعف وكرب مخلوط',
+        weight: 2.8,
+        lat: 25.4380,
+        lng: 49.5700,
+        status: 'pending',
+        acceptedBy: null,
+        eta: null,
+        requestedAtDate: '2026/09/18',
+        requestedAtTime: '07:40 ص'
+      },
+      {
+        id: 'farm_3',
+        name: 'مزرعة العثمان - الفضلية',
+        location: 'قرية الفضلية، شرق الواحة',
+        wasteType: 'سعف',
+        wasteTitle: 'سعف نخيل جاف',
+        weight: 3.1,
+        lat: 25.3780,
+        lng: 49.7150,
+        status: 'pending',
+        acceptedBy: null,
+        eta: null,
+        requestedAtDate: '2026/09/17',
+        requestedAtTime: '05:20 م'
+      },
+      {
+        id: 'farm_4',
+        name: 'مزارع الصالحية - وسط الهفوف',
+        location: 'حزام الصالحية، الهفوف',
+        wasteType: 'كرب',
+        wasteTitle: 'كرب وجذوع نخيل',
+        weight: 4.2,
+        lat: 25.3700,
+        lng: 49.5880,
+        status: 'pending',
+        acceptedBy: null,
+        eta: null,
+        requestedAtDate: '2026/09/17',
+        requestedAtTime: '03:10 م'
+      }
+    ];
+
+    let currentActiveFactory = factoriesData['factory_oyoun'];
+    let selectedFarmIds = [];
+    let completedPickups = [];
+    let currentFilterType = 'all';
+
+    let totalWasteCollected = 13.5;
+    let totalCarbonReduced = 18.4;
+    let totalFuelSaved = 142;
+
+    let mapInstance = null;
+    let markersLayerGroup = null;
+    let routeLayerGroup = null;
+
+    let farmerMapInstance = null;
+    let farmerMarker = null;
+    let selectedFarmerLocation = { lat: 25.4150, lng: 49.6920, text: 'بوابة طريق القارة الزراعي (25.4150, 49.6920)' };
+
+    function calcDistance(p1, p2) {
+      const R = 6371;
+      const dLat = (p2.lat - p1.lat) * Math.PI / 180;
+      const dLng = (p2.lng - p1.lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    function generateStreetSnappedPoints(from, to) {
+      const points = [];
+      points.push([from.lat, from.lng]);
+      const dLat = to.lat - from.lat;
+      const dLng = to.lng - from.lng;
+      points.push([from.lat + dLat * 0.2, from.lng + dLng * 0.05]);
+      points.push([from.lat + dLat * 0.55, from.lng + dLng * 0.15]);
+      points.push([from.lat + dLat * 0.6, from.lng + dLng * 0.75]);
+      points.push([to.lat, to.lng]);
+      return points;
+    }
+
+    function initMap() {
+      if (mapInstance) return;
+      mapInstance = L.map('map', { center: [25.45, 49.62], zoom: 10, zoomControl: false });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(mapInstance);
+      markersLayerGroup = L.layerGroup().addTo(mapInstance);
+      routeLayerGroup = L.layerGroup().addTo(mapInstance);
+    }
+
+    function initFarmerMap() {
+      if (farmerMapInstance) return;
+      farmerMapInstance = L.map('farmer-map', { center: [selectedFarmerLocation.lat, selectedFarmerLocation.lng], zoom: 12, zoomControl: false });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(farmerMapInstance);
+
+      const markerIcon = L.divIcon({
+        html: `<div style="background-color:#C99A3D; color:#12372A; border:2px solid #12372A; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px;">📍</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30]
+      });
+
+      farmerMarker = L.marker([selectedFarmerLocation.lat, selectedFarmerLocation.lng], { icon: markerIcon, draggable: true }).addTo(farmerMapInstance);
+      farmerMarker.on('dragend', function () {
+        const pos = farmerMarker.getLatLng();
+        selectedFarmerLocation.lat = pos.lat;
+        selectedFarmerLocation.lng = pos.lng;
+        document.getElementById('selected-coords-text').innerText = `إحداثيات البوابة (${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})`;
+      });
+    }
+
+    function updateMapDisplay(orderedPath = []) {
+      if (!mapInstance) initMap();
+      markersLayerGroup.clearLayers();
+      routeLayerGroup.clearLayers();
+
+      const factoryIcon = L.divIcon({
+        html: `<div style="background:#12372A; color:#C99A3D; border:2px solid #C99A3D; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px;">🏭</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      L.marker([currentActiveFactory.lat, currentActiveFactory.lng], { icon: factoryIcon }).addTo(markersLayerGroup);
+
+      farmsData.forEach(farm => {
+        if (farm.status === 'completed') return;
+        const isSelected = selectedFarmIds.includes(farm.id);
+        const farmIcon = L.divIcon({
+          html: `<div style="background:${isSelected ? '#C99A3D' : '#ffffff'}; border:2px solid #12372A; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px;">🌴</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
+        });
+        L.marker([farm.lat, farm.lng], { icon: farmIcon }).addTo(markersLayerGroup);
+      });
+
+      if (orderedPath.length > 0) {
+        let fullCoords = [];
+        let prev = currentActiveFactory;
+        orderedPath.forEach(step => {
+          fullCoords = fullCoords.concat(generateStreetSnappedPoints(prev, step.farm));
+          prev = step.farm;
+        });
+        fullCoords = fullCoords.concat(generateStreetSnappedPoints(prev, currentActiveFactory));
+
+        L.polyline(fullCoords, { color: '#12372A', weight: 6, opacity: 0.35 }).addTo(routeLayerGroup);
+        L.polyline(fullCoords, { color: '#C99A3D', weight: 4, opacity: 1 }).addTo(routeLayerGroup);
+        mapInstance.fitBounds(L.latLngBounds(fullCoords).pad(0.2));
+      }
+    }
+
+    // Function to handle filter chips on mobile view
+    function filterWasteMobile(type) {
+      currentFilterType = type;
+      ['all', 'saaf', 'karab'].forEach(t => {
+        const btn = document.getElementById(`m-flt-${t}`);
+        if (btn) {
+          btn.className = "px-3 py-1.5 rounded-xl text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 transition whitespace-nowrap";
+        }
+      });
+
+      const activeBtnId = type === 'all' ? 'm-flt-all' : (type === 'سعف' ? 'm-flt-saaf' : 'm-flt-karab');
+      const activeBtn = document.getElementById(activeBtnId);
+      if (activeBtn) {
+        activeBtn.className = "px-3 py-1.5 rounded-xl text-[10px] font-bold bg-brand-green text-white shadow-sm transition whitespace-nowrap";
+      }
+
+      renderFarms(type);
+    }
+
+    function renderFarms(filter = currentFilterType) {
+      const container = document.getElementById('farms-container');
+      container.innerHTML = '';
+      
+      const filteredFarms = farmsData.filter(f => {
+        if (f.status === 'completed') return false;
+        if (filter !== 'all' && !f.wasteType.includes(filter)) return false;
+        return true;
+      });
+
+      document.getElementById('available-farms-count').innerText = `${filteredFarms.length} مزارع`;
+
+      if (filteredFarms.length === 0) {
+        container.innerHTML = `<div class="bg-white p-4 rounded-xl text-center text-gray-400 text-xs">لا توجد مزارع تطابق هذا الفلتر حالياً.</div>`;
+        return;
+      }
+
+      filteredFarms.forEach(farm => {
+        const isChecked = selectedFarmIds.includes(farm.id);
+        const dist = calcDistance(currentActiveFactory, farm).toFixed(1);
+
+        const card = document.createElement('div');
+        card.className = `p-2.5 rounded-xl border-2 transition cursor-pointer flex items-center justify-between ${isChecked ? 'border-brand-gold bg-brand-beigeLight' : 'border-gray-200 bg-white'}`;
+        card.onclick = () => toggleFarm(farm.id);
+
+        card.innerHTML = `
+          <div class="flex items-start gap-2">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-4 h-4 mt-0.5 accent-brand-green pointer-events-none">
+            <div>
+              <h4 class="font-bold text-brand-green text-xs">${farm.name}</h4>
+              <p class="text-[9px] text-gray-500">🕒 تم الرفع: ${farm.requestedAtDate} (${farm.requestedAtTime})</p>
+              <p class="text-[10px] text-gray-600 font-bold">${farm.wasteTitle} • ${farm.weight} طن</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold bg-brand-beige text-brand-green px-2 py-1 rounded-md">
+            ${dist} كم
+          </span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleFarm(farmId) {
+      if (selectedFarmIds.includes(farmId)) selectedFarmIds = selectedFarmIds.filter(id => id !== farmId);
+      else selectedFarmIds.push(farmId);
+      renderFarms();
+      computeOptimalRoute();
+    }
+
+    function changeActiveFactory() {
+      const selectedKey = document.getElementById('factory-location-selector').value;
+      currentActiveFactory = factoriesData[selectedKey];
+      renderFarms();
+      computeOptimalRoute();
+    }
+
+    function computeOptimalRoute() {
+      const stopsCount = document.getElementById('route-stops-count');
+      const metricDist = document.getElementById('metric-distance');
+      const metricTime = document.getElementById('metric-time');
+      const metricFuel = document.getElementById('metric-fuel');
+      const truckCounter = document.getElementById('truck-capacity-counter');
+      const dispatchBtn = document.getElementById('dispatch-btn');
+      const completeBtn = document.getElementById('complete-pickup-btn');
+
+      if (selectedFarmIds.length === 0) {
+        stopsCount.innerText = '0 محطات';
+        metricDist.innerText = '0 كم';
+        metricTime.innerText = '0 د';
+        metricFuel.innerText = '0%';
+        truckCounter.innerText = '0 طن / 10 طن';
+        dispatchBtn.disabled = true;
+        dispatchBtn.className = "w-full py-3 bg-gray-300 text-gray-500 font-extrabold text-xs rounded-xl cursor-not-allowed";
+        completeBtn.classList.add('hidden');
+        updateMapDisplay([]);
+        return;
+      }
+
+      let remaining = farmsData.filter(f => selectedFarmIds.includes(f.id) && f.status !== 'completed');
+      let current = { name: currentActiveFactory.name, lat: currentActiveFactory.lat, lng: currentActiveFactory.lng };
+      let ordered = [];
+      let totalDist = 0;
+      let totalWeight = 0;
+
+      while (remaining.length > 0) {
+        let nearestIdx = 0;
+        let shortD = calcDistance(current, remaining[0]);
+        for (let i = 1; i < remaining.length; i++) {
+          const d = calcDistance(current, remaining[i]);
+          if (d < shortD) { shortD = d; nearestIdx = i; }
+        }
+        const next = remaining[nearestIdx];
+        const roadDist = shortD * 1.15;
+        totalDist += roadDist;
+        totalWeight += next.weight;
+        ordered.push({ farm: next, legDistance: roadDist });
+        current = next;
+        remaining.splice(nearestIdx, 1);
+      }
+
+      totalDist += (calcDistance(current, currentActiveFactory) * 1.15);
+      updateMapDisplay(ordered);
+
+      stopsCount.innerText = `${ordered.length} محطات`;
+      metricDist.innerText = `${totalDist.toFixed(1)} كم`;
+      metricTime.innerText = `${Math.round((totalDist / 40) * 60 + (ordered.length * 15))} د`;
+      truckCounter.innerText = `${totalWeight.toFixed(1)} طن / 10 طن`;
+      metricFuel.innerText = `${Math.min(42, 18 + ordered.length * 6)}%`;
+
+      dispatchBtn.disabled = false;
+      dispatchBtn.className = "w-full py-3 bg-brand-gold text-brand-green font-extrabold text-xs rounded-xl shadow cursor-pointer";
+      completeBtn.classList.remove('hidden');
+      completeBtn.disabled = false;
+    }
+
+    function dispatchTruck() {
+      farmsData.forEach(f => {
+        if (selectedFarmIds.includes(f.id)) {
+          f.status = 'accepted';
+          f.acceptedBy = currentActiveFactory.name;
+          f.eta = '25 دقيقة';
+        }
+      });
+      document.getElementById('farmer-accepted-notification').classList.remove('hidden');
+      renderFarms();
+      renderFarmerOrders();
+      alert("🚚 تم قبول الطلبات وتحديد المسار الأقصر لسائق شاحنة المصنع!");
+    }
+
+    function completeCurrentPickups() {
+      let addedWeight = 0;
+      farmsData.filter(f => selectedFarmIds.includes(f.id)).forEach(f => {
+        f.status = 'completed';
+        addedWeight += f.weight;
+        completedPickups.push({ ...f, completedAt: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) });
+      });
+
+      totalWasteCollected += addedWeight;
+      totalCarbonReduced += (addedWeight * 1.36);
+      totalFuelSaved += Math.round(addedWeight * 10);
+      updateReportValues();
+
+      selectedFarmIds = [];
+      renderFarms();
+      renderFarmerOrders();
+      renderCompletedPickups();
+      computeOptimalRoute();
+      alert(`✅ تم إتمام الاستلام بنجاح وتحديث أرقام خفض الكربون (+${addedWeight.toFixed(1)} طن)!`);
+    }
+
+    function updateReportValues() {
+      document.getElementById('kpi-carbon-saved').innerText = `${totalCarbonReduced.toFixed(1)} طن`;
+      document.getElementById('kpi-waste-saved').innerText = `${totalWasteCollected.toFixed(1)} طن`;
+      document.getElementById('kpi-fuel-saved').innerText = `${totalFuelSaved} لتر`;
+      document.getElementById('kpi-trees-equiv').innerText = `${Math.round(totalCarbonReduced * 45.5)} شجرة`;
+    }
+
+    function renderCompletedPickups() {
+      const container = document.getElementById('completed-pickups-list');
+      document.getElementById('completed-pickups-badge').innerText = completedPickups.length;
+      if (completedPickups.length === 0) return;
+      container.innerHTML = completedPickups.map(item => `
+        <div class="p-2 bg-emerald-50 rounded-lg border border-emerald-200 flex justify-between items-center text-[10px]">
+          <div>
+            <strong class="text-brand-green block">${item.name}</strong>
+            <span class="text-gray-500">${item.weight} طن • تم رفع الطلب: ${item.requestedAtDate}</span>
+          </div>
+          <span class="text-emerald-800 font-bold">✓ تم الاستلام</span>
+        </div>
+      `).join('');
+    }
+
+    function renderFarmerOrders() {
+      const currentList = document.getElementById('current-orders-list');
+      const prevList = document.getElementById('previous-orders-list');
+      const currents = farmsData.filter(f => f.status !== 'completed');
+      document.getElementById('current-orders-badge').innerText = currents.length;
+      document.getElementById('previous-orders-badge').innerText = completedPickups.length;
+
+      currentList.innerHTML = currents.map(o => `
+        <div class="p-2 bg-brand-beigeLight rounded-xl border border-brand-gold/30 text-[10px]">
+          <strong class="text-brand-green block text-xs">${o.name}</strong>
+          <span class="text-gray-500 block">🕒 تاريخ الرفع: ${o.requestedAtDate} - ${o.requestedAtTime}</span>
+          <span class="font-bold ${o.status === 'accepted' ? 'text-emerald-700' : 'text-amber-700'}">
+            ${o.status === 'accepted' ? '✓ تم قبول الطلب وجاري وصول الشاحنة' : '• قيد الانتظار لموافقة المصنع'}
+          </span>
+        </div>
+      `).join('');
+
+      prevList.innerHTML = completedPickups.map(o => `
+        <div class="p-2 bg-gray-50 rounded-xl border text-[10px]">
+          <strong class="text-gray-700 block">${o.name}</strong>
+          <span class="text-gray-400 block">${o.weight} طن • تم الاستلام بنجاح</span>
+        </div>
+      `).join('');
+    }
+
+    function switchFarmerInnerTab(tab) {
+      if (tab === 'new') {
+        document.getElementById('farmer-new-request-panel').classList.remove('hidden');
+        document.getElementById('farmer-orders-panel').classList.add('hidden');
+        document.getElementById('farmer-tab-new').className = "py-2 rounded-lg font-bold text-xs bg-brand-green text-white shadow";
+        document.getElementById('farmer-tab-orders').className = "py-2 rounded-lg font-bold text-xs text-brand-green";
+      } else {
+        document.getElementById('farmer-new-request-panel').classList.add('hidden');
+        document.getElementById('farmer-orders-panel').classList.remove('hidden');
+        document.getElementById('farmer-tab-orders').className = "py-2 rounded-lg font-bold text-xs bg-brand-green text-white shadow";
+        document.getElementById('farmer-tab-new').className = "py-2 rounded-lg font-bold text-xs text-brand-green";
+        renderFarmerOrders();
+      }
+    }
+
+    function submitFarmerRequest() {
+      const now = new Date();
+      const weight = document.getElementById('farmer-manual-weight').value || 3.4;
+      const order = {
+        id: 'farm_' + (farmsData.length + 1),
+        name: 'مزرعة أبو عبد الله - نخل القارة',
+        location: selectedFarmerLocation.text,
+        wasteType: 'سعف',
+        wasteTitle: 'سعف وكرب نخل',
+        weight: parseFloat(weight),
+        lat: selectedFarmerLocation.lat,
+        lng: selectedFarmerLocation.lng,
+        status: 'pending',
+        requestedAtDate: now.toLocaleDateString('ar-SA'),
+        requestedAtTime: now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+      };
+      farmsData.unshift(order);
+      renderFarms();
+      renderFarmerOrders();
+      alert("✅ تم إرسال طلبك وتسجيل وقت الرفع بنجاح!");
+      switchFarmerInnerTab('orders');
+    }
+
+    function simulateAICamera() {
+      const box = document.getElementById('camera-box');
+      box.innerHTML = `<p class="text-xs font-bold text-brand-green"><i class="fa-solid fa-spinner fa-spin text-brand-gold ml-1"></i> جاري التعرف على المخلفات...</p>`;
+      setTimeout(() => {
+        document.getElementById('ai-result-card').classList.remove('hidden');
+        box.innerHTML = `<p class="text-xs font-bold text-emerald-800"><i class="fa-solid fa-check ml-1"></i> تم التقاط وتحليل الصورة</p>`;
+      }, 900);
+    }
+
+    function selectLoginRole(role) {
+      if (role === 'farmer') {
+        document.getElementById('farmer-login-box').classList.remove('hidden');
+        document.getElementById('factory-login-box').classList.add('hidden');
+        document.getElementById('role-farmer-btn').className = "py-2 rounded-xl font-bold text-xs text-white bg-brand-green shadow transition";
+        document.getElementById('role-factory-btn').className = "py-2 rounded-xl font-bold text-xs text-brand-green hover:bg-brand-beige transition";
+      } else {
+        document.getElementById('factory-login-box').classList.remove('hidden');
+        document.getElementById('farmer-login-box').classList.add('hidden');
+        document.getElementById('role-factory-btn').className = "py-2 rounded-xl font-bold text-xs text-white bg-brand-green shadow transition";
+        document.getElementById('role-farmer-btn').className = "py-2 rounded-xl font-bold text-xs text-brand-green hover:bg-brand-beige transition";
+      }
+    }
+
+    function simulateLogin(type) {
+      switchAppTab(type);
+    }
+
+    function switchAppTab(tab) {
+      ['login', 'farmer', 'factory', 'whatsapp', 'report'].forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.add('hidden');
+      });
+
+      ['farmer', 'factory', 'whatsapp', 'report'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (btn) {
+          btn.classList.remove('active-tab');
+          btn.classList.add('text-gray-400');
+        }
+      });
+
+      const currentView = document.getElementById(`view-${tab}`);
+      if (currentView) currentView.classList.remove('hidden');
+
+      const currentTab = document.getElementById(`tab-${tab}`);
+      if (currentTab) {
+        currentTab.classList.add('active-tab');
+        currentTab.classList.remove('text-gray-400');
+      }
+
+      if (tab === 'factory') {
+        setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 150);
+      } else if (tab === 'farmer') {
+        setTimeout(() => { if (farmerMapInstance) farmerMapInstance.invalidateSize(); }, 150);
+      }
+    }
+
+    // WhatsApp Bot logic
+    let waStep = 0;
+    function appendWaMessage(sender, text) {
+      const chat = document.getElementById('whatsapp-chat-box');
+      const div = document.createElement('div');
+      div.className = sender === 'user' ? "flex flex-col items-end mr-auto max-w-[85%]" : "flex flex-col items-start max-w-[85%]";
+      div.innerHTML = `<div class="${sender === 'user' ? 'bg-[#DCF8C6]' : 'bg-white'} p-2 rounded-xl text-[11px] shadow-sm text-gray-800">${text}</div>`;
+      chat.appendChild(div);
