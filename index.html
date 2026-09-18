@@ -998,3 +998,91 @@
       div.className = sender === 'user' ? "flex flex-col items-end mr-auto max-w-[85%]" : "flex flex-col items-start max-w-[85%]";
       div.innerHTML = `<div class="${sender === 'user' ? 'bg-[#DCF8C6]' : 'bg-white'} p-2 rounded-xl text-[11px] shadow-sm text-gray-800">${text}</div>`;
       chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function restartWhatsAppDemo() {
+      waStep = 0;
+      document.getElementById('whatsapp-chat-box').innerHTML = `<div class="text-center"><span class="bg-[#FFEECD] text-gray-600 text-[9px] px-2.5 py-0.5 rounded shadow-sm">🔒 المحادثة التفاعلية لخدمة كبار السن لرفع الطلب</span></div>`;
+      document.getElementById('wa-next-step-btn').innerHTML = `إرسال: "السلام عليكم، عندي مخلفات نخل أبي أرفع طلب" 💬`;
+      document.getElementById('wa-action-hint').innerText = "ابدأ كصاحب مزرعة:";
+    }
+
+    function nextWhatsAppStep() {
+      const btn = document.getElementById('wa-next-step-btn');
+      const hint = document.getElementById('wa-action-hint');
+
+      if (waStep === 0) {
+        appendWaMessage('user', 'السلام عليكم، عندي مخلفات نخل في المزرعة وأبي أرفع طلب جمع للمصانع.');
+        btn.disabled = true;
+        setTimeout(() => {
+          appendWaMessage('bot', 'وعليكم السلام ورحمة الله وبركاته، حياك الله في منصة كَرَب 🌴<br>نسعد بخدمتك، بنسألك 3 أسئلة بسيطة ونرفع الطلب للمصنع:');
+          setTimeout(() => {
+            appendWaMessage('bot', '<strong>السؤال الأول:</strong> وش نوع المخلفات الموجودة بالمزرعة حالياً؟ (سعف، كرب، أو عذوق؟)');
+            btn.disabled = false;
+            btn.innerText = 'إرسال: "سعف نخل طازج" 🌿';
+            hint.innerText = "أجب عن السؤال الأول:";
+            waStep = 1;
+          }, 600);
+        }, 600);
+      } else if (waStep === 1) {
+        appendWaMessage('user', 'سعف نخل طازج ناتج من صرام النخيل.');
+        btn.disabled = true;
+        setTimeout(() => {
+          appendWaMessage('bot', '<strong>السؤال الثاني:</strong> كم الوزن أو الحجم التقريبي للكمية؟');
+          btn.disabled = false;
+          btn.innerText = 'إرسال: "3.5 طن تقريباً" ⚖️';
+          hint.innerText = "أجب عن السؤال الثاني:";
+          waStep = 2;
+        }, 600);
+      } else if (waStep === 2) {
+        appendWaMessage('user', 'الوزن تقريباً 3.5 طن (شاحنة متوسطة).');
+        btn.disabled = true;
+        setTimeout(() => {
+          appendWaMessage('bot', '<strong>السؤال الثالث:</strong> أرسل لي لوكيشن المزرعة (Location Pin) لتوجيه الشاحنة لبوابتك بدقة 📍');
+          btn.disabled = false;
+          btn.innerText = 'إرسال: مشاركة موقع المزرعة 📍';
+          hint.innerText = "شارك الموقع:";
+          waStep = 3;
+        }, 600);
+      } else if (waStep === 3) {
+        appendWaMessage('user', '📍 تم إرسال موقع المزرعة (قرية الفضلية، الأحساء)');
+        btn.disabled = true;
+        setTimeout(() => {
+          const now = new Date();
+          farmsData.unshift({
+            id: 'farm_' + (farmsData.length + 1),
+            name: 'مزرعة الواتساب - نخل الفضلية',
+            location: 'قرية الفضلية (عبر الواتساب)',
+            wasteType: 'سعف',
+            wasteTitle: 'سعف نخل طازج',
+            weight: 3.5,
+            lat: 25.3780,
+            lng: 49.7150,
+            status: 'pending',
+            requestedAtDate: now.toLocaleDateString('ar-SA'),
+            requestedAtTime: now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+          });
+          renderFarms();
+          renderFarmerOrders();
+          appendWaMessage('bot', '✅ <strong>تم رفع طلبك للمنصة تلقائياً!</strong><br>• النوع: سعف نخل طازج (3.5 طن)<br>• وقت التسجيل: اليوم<br>سنرسل لك إشعاراً فور تحرك الشاحنة لمزرعتك 🚚');
+          btn.innerText = 'الانتقال للوحة المصنع لمعاينة الطلب الجديد 🏭';
+          btn.disabled = false;
+          waStep = 4;
+        }, 900);
+      } else if (waStep === 4) {
+        switchAppTab('factory');
+      }
+    }
+
+    window.onload = () => {
+      initMap();
+      initFarmerMap();
+      renderFarms();
+      renderFarmerOrders();
+      computeOptimalRoute();
+      updateReportValues();
+    };
+  </script>
+</body>
+</html>
