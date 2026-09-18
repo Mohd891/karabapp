@@ -232,20 +232,20 @@
             <div id="camera-box" onclick="simulateAICamera()" class="border-2 border-dashed border-brand-gold rounded-xl p-4 bg-brand-beigeLight text-center cursor-pointer active:scale-95 transition">
               <i class="fa-solid fa-camera text-2xl text-brand-gold mb-1"></i>
               <p class="font-bold text-brand-green text-xs">اضغط هنا للتصوير</p>
-              <p class="text-[10px] text-gray-500">الذكاء الاصطناعي يحدد النوع والوزن تلقائياً</p>
+              <p class="text-[10px] text-gray-500">الذكاء الاصطناعي يصنف النوع ويقترح نطاق كمية للتأكيد</p>
             </div>
           </div>
 
           <div id="ai-result-card" class="hidden bg-emerald-50 border border-emerald-300 rounded-xl p-2.5 space-y-1 text-xs">
-            <span class="font-bold text-emerald-800 text-[11px]">✓ تحليل الصورة بالذكاء الاصطناعي:</span>
+            <div class="flex items-center justify-between gap-2"><span class="font-bold text-emerald-800 text-[11px]">✓ تحليل الصورة — Prototype:</span><span class="text-[9px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">ثقة توضيحية 96%</span></div>
             <div class="grid grid-cols-2 gap-1.5 text-[11px] pt-0.5">
               <div class="bg-white p-1.5 rounded-lg border border-emerald-100">
                 <span class="text-gray-400 block text-[9px]">النوع:</span>
                 <strong class="text-brand-green">سعف نخيل طازج</strong>
               </div>
               <div class="bg-white p-1.5 rounded-lg border border-emerald-100">
-                <span class="text-gray-400 block text-[9px]">تقدير الوزن:</span>
-                <strong class="text-brand-gold">~3.2 طن</strong>
+                <span class="text-gray-400 block text-[9px]">الكمية التقديرية:</span>
+                <strong class="text-brand-gold">2–4 طن</strong><span class="block text-[8px] text-gray-400 mt-0.5">تقدير أولي يؤكده المستخدم</span>
               </div>
             </div>
           </div>
@@ -296,7 +296,7 @@
             </div>
             <div>
               <h4 class="font-bold text-xs">بوت كَرَب للواتساب</h4>
-              <p class="text-[9px] text-emerald-200">حساب رسمي معتمد • متصل الآن</p>
+              <p class="text-[9px] text-emerald-200">قناة تجريبية للنموذج • متصل الآن</p>
             </div>
           </div>
           <button onclick="restartWhatsAppDemo()" class="text-[10px] bg-white/20 px-2 py-0.5 rounded">إعادة</button>
@@ -315,6 +315,10 @@
           <button id="wa-next-step-btn" onclick="nextWhatsAppStep()" class="w-full py-2 bg-[#25D366] text-white font-bold text-[11px] rounded-xl shadow active:scale-95 transition">
             إرسال: "السلام عليكم، عندي مخلفات نخل أبي أرفع طلب" 💬
           </button>
+          <button id="wa-voice-btn" onclick="simulateVoiceNoteFlow()" class="w-full py-2 bg-white text-[#075E54] border border-[#25D366] font-bold text-[11px] rounded-xl shadow-sm active:scale-95 transition">
+            <i class="fa-solid fa-microphone ml-1"></i> تجربة رفع الطلب برسالة صوتية
+          </button>
+          <p class="text-[9px] text-gray-400 text-center">تحويل الصوت والبيانات هنا محاكاة توضيحية للـPrototype.</p>
         </div>
       </section>
 
@@ -341,10 +345,44 @@
           </div>
         </div>
 
+        <!-- Factory Demand Agent -->
+        <div class="bg-white rounded-2xl p-3 shadow border border-brand-green/10 space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-black text-brand-green"><i class="fa-solid fa-wand-magic-sparkles text-brand-gold ml-1"></i> وكيل الطلب والتوريد</h3>
+              <p class="text-[9px] text-gray-500">حدد احتياج المصنع؛ الوكيل يطابق العرض ويقترح رحلة ضمن سعة الشاحنة.</p>
+            </div>
+            <span class="text-[9px] bg-brand-beige text-brand-green px-2 py-0.5 rounded-full font-bold">Agentic Demo</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5">
+            <select id="factory-demand-type" class="px-2 py-2 border rounded-xl bg-gray-50 text-[10px] font-bold">
+              <option value="سعف">سعف نخيل</option>
+              <option value="كرب">كرب وجذوع</option>
+            </select>
+            <input id="factory-demand-qty" type="number" min="1" max="10" value="8" step="0.5" class="px-2 py-2 border rounded-xl bg-gray-50 text-[10px] font-bold" placeholder="الكمية طن">
+            <select id="factory-demand-frequency" class="px-2 py-2 border rounded-xl bg-gray-50 text-[10px] font-bold">
+              <option value="once">طلب حالي</option>
+              <option value="weekly">طلب أسبوعي</option>
+              <option value="monthly">طلب شهري</option>
+            </select>
+            <select id="factory-demand-radius" class="px-2 py-2 border rounded-xl bg-gray-50 text-[10px] font-bold">
+              <option value="20">نطاق 20 كم</option>
+              <option value="35" selected>نطاق 35 كم</option>
+              <option value="60">نطاق 60 كم</option>
+            </select>
+          </div>
+          <button onclick="createFactoryDemand()" class="w-full py-2 bg-brand-green text-white rounded-xl text-[10px] font-black">
+            تشغيل الوكيل ومطابقة الإمدادات
+          </button>
+          <div id="demand-agent-status" class="text-[9px] text-gray-500 bg-brand-beigeLight border border-brand-gold/20 rounded-xl p-2">
+            لا يوجد طلب نشط بعد.
+          </div>
+        </div>
+
         <!-- Live Street Map -->
         <div class="bg-white rounded-2xl p-3 shadow border border-brand-green/10 space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-brand-green">
-            <span><i class="fa-solid fa-route text-brand-gold ml-1"></i> مسار الشوارع الواقعي (أقصر طريق):</span>
+            <span><i class="fa-solid fa-route text-brand-gold ml-1"></i> المسار المقترح — محاكاة Prototype:</span>
             <span id="route-stops-count" class="text-[10px] bg-brand-beige px-2 py-0.5 rounded">0 محطات</span>
           </div>
           <div id="map"></div>
@@ -359,10 +397,24 @@
               <strong id="metric-time" class="text-brand-green font-bold">0 د</strong>
             </div>
             <div class="bg-brand-beigeLight p-1.5 rounded-lg border border-brand-gold/20">
-              <span class="text-gray-400 block">توفير الديزل</span>
+              <span class="text-gray-400 block">خفض المسافة</span>
               <strong id="metric-fuel" class="text-emerald-700 font-bold">0%</strong>
             </div>
           </div>
+        </div>
+
+        <!-- One decision card -->
+        <div id="agent-decision-card" class="bg-brand-green text-white rounded-2xl p-3 shadow border border-brand-gold/40 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-brand-gold">قرار الوكيل للمصنع</span>
+            <span class="text-[9px] bg-white/10 px-2 py-0.5 rounded-full">One screen — One decision</span>
+          </div>
+          <div id="agent-decision-summary" class="text-[10px] text-brand-beige/90">اختر المزارع أو أنشئ طلب مصنع ليبني الوكيل توصية.</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="approveAgentRecommendation()" class="py-2 bg-brand-gold text-brand-green rounded-xl text-[10px] font-black">اعتماد التوصية</button>
+            <button onclick="modifyAgentRecommendation()" class="py-2 bg-white/10 border border-white/20 text-white rounded-xl text-[10px] font-bold">تعديل التوصية</button>
+          </div>
+          <div id="agent-feedback" class="hidden text-[9px] bg-white/10 rounded-lg p-2"></div>
         </div>
 
         <!-- ========================================== -->
@@ -427,42 +479,39 @@
         <div class="bg-brand-green text-white p-4 rounded-2xl shadow border-2 border-brand-gold/40 space-y-3">
           <div class="flex items-center justify-between border-b border-white/10 pb-2">
             <div>
-              <h3 class="text-sm font-black text-brand-gold">تقرير خفض الكربون والاستدامة 📄</h3>
-              <p class="text-[10px] text-brand-beige/80">المساهمة البيئية لمصنعك في واحة الأحساء</p>
+              <h3 class="text-sm font-black text-brand-gold">تقرير أثر النقل — Prototype 📊</h3>
+              <p class="text-[10px] text-brand-beige/80">حساب شفاف مبني على مقارنة المسار الأساسي بالمسار المقترح.</p>
             </div>
-            <span class="text-[9px] bg-brand-gold text-brand-green font-bold px-2 py-0.5 rounded-full">معتمد ESG</span>
+            <span class="text-[9px] bg-brand-gold text-brand-green font-bold px-2 py-0.5 rounded-full">Prototype Scenario</span>
           </div>
-
           <div class="grid grid-cols-2 gap-2 text-brand-darkText">
             <div class="bg-white p-2.5 rounded-xl">
-              <span class="text-[10px] text-gray-500 block">خفض انبعاثات الكربون</span>
-              <strong id="kpi-carbon-saved" class="text-sm font-black text-emerald-800">18.4 طن</strong>
+              <span class="text-[10px] text-gray-500 block">أطنان تمت مطابقتها</span>
+              <strong id="kpi-waste-saved" class="text-sm font-black text-brand-gold">0.0 طن</strong>
             </div>
             <div class="bg-white p-2.5 rounded-xl">
-              <span class="text-[10px] text-gray-500 block">مخلفات تم إنقاذها</span>
-              <strong id="kpi-waste-saved" class="text-sm font-black text-brand-gold">13.5 طن</strong>
+              <span class="text-[10px] text-gray-500 block">خفض المسافة</span>
+              <strong id="kpi-route-reduction" class="text-sm font-black text-emerald-800">0%</strong>
             </div>
             <div class="bg-white p-2.5 rounded-xl">
-              <span class="text-[10px] text-gray-500 block">ديزل موفر بالمسار</span>
-              <strong id="kpi-fuel-saved" class="text-sm font-black text-blue-800">142 لتر</strong>
+              <span class="text-[10px] text-gray-500 block">ديزل موفر تقديري</span>
+              <strong id="kpi-fuel-saved" class="text-sm font-black text-blue-800">0.0 لتر</strong>
             </div>
             <div class="bg-white p-2.5 rounded-xl">
-              <span class="text-[10px] text-gray-500 block">المكافئ لغرس أشجار</span>
-              <strong id="kpi-trees-equiv" class="text-sm font-black text-brand-green">836 شجرة</strong>
+              <span class="text-[10px] text-gray-500 block">CO₂ نقل تقديري</span>
+              <strong id="kpi-carbon-saved" class="text-sm font-black text-brand-green">0.0 كجم</strong>
             </div>
           </div>
         </div>
-
         <div class="bg-white rounded-2xl p-3.5 shadow border border-brand-green/10 text-xs space-y-2">
-          <h4 class="font-bold text-brand-green">تفاصيل الأثر البيئي المعتمد:</h4>
-          <div class="space-y-1.5 text-[11px] text-gray-700">
-            <p>• <strong>المعيار المطبق:</strong> منع انبعاثات الحرق المكشوف (1.36 طن CO₂e لكل طن سعف).</p>
-            <p>• <strong>النقل الذكي:</strong> تقليل حركة الشاحنات بنسبة 38% داخل الطرق الزراعية.</p>
-            <p>• <strong>التوافق:</strong> يدعم مستهدفات مبادرة السعودية الخضراء لتقليل الانبعاثات والحياد الصفري.</p>
+          <h4 class="font-bold text-brand-green">كيف تُحسب المؤشرات؟</h4>
+          <div class="space-y-1.5 text-[10px] text-gray-700">
+            <p>• <strong>المسار الأساسي:</strong> رحلة مستقلة ذهابًا وعودة لكل مزرعة مختارة.</p>
+            <p>• <strong>المسار المقترح:</strong> رحلة تجميع واحدة بتسلسل أقرب نقطة ضمن النموذج التجريبي.</p>
+            <p>• <strong>الوقود:</strong> الكيلومترات الموفرة × 0.22 لتر/كم كفرضية Prototype قابلة للتعديل.</p>
+            <p>• <strong>CO₂ النقل:</strong> الوقود الموفر × 2.68 كجم CO₂/لتر كعامل توضيحي داخل النموذج.</p>
           </div>
-          <button onclick="alert('✅ تم تصدير تقرير الاستدامة كملف PDF بنجاح!')" class="w-full py-2.5 bg-brand-gold text-brand-green font-black text-xs rounded-xl shadow mt-2">
-            تحميل الشهادة البيئية (PDF) 📥
-          </button>
+          <p class="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">هذه مؤشرات محاكاة وليست نتائج Pilot أو شهادة ESG.</p>
         </div>
       </section>
 
@@ -581,9 +630,8 @@
     let completedPickups = [];
     let currentFilterType = 'all';
 
-    let totalWasteCollected = 13.5;
-    let totalCarbonReduced = 18.4;
-    let totalFuelSaved = 142;
+    let impactStats = { matchedTons: 0, savedKm: 0, fuelLiters: 0, co2Kg: 0, reductionPct: 0 };
+    let lastRouteMetrics = { baselineKm: 0, optimizedKm: 0, savedKm: 0, fuelLiters: 0, co2Kg: 0, reductionPct: 0 };
 
     let mapInstance = null;
     let markersLayerGroup = null;
@@ -769,10 +817,12 @@
         metricTime.innerText = '0 د';
         metricFuel.innerText = '0%';
         truckCounter.innerText = '0 طن / 10 طن';
+        lastRouteMetrics = { baselineKm: 0, optimizedKm: 0, savedKm: 0, fuelLiters: 0, co2Kg: 0, reductionPct: 0 };
         dispatchBtn.disabled = true;
         dispatchBtn.className = "w-full py-3 bg-gray-300 text-gray-500 font-extrabold text-xs rounded-xl cursor-not-allowed";
         completeBtn.classList.add('hidden');
         updateMapDisplay([]);
+        updateAgentDecisionCard([], 0, 0);
         return;
       }
 
@@ -781,6 +831,11 @@
       let ordered = [];
       let totalDist = 0;
       let totalWeight = 0;
+      let baselineKm = 0;
+
+      remaining.forEach(f => {
+        baselineKm += calcDistance(currentActiveFactory, f) * 1.15 * 2;
+      });
 
       while (remaining.length > 0) {
         let nearestIdx = 0;
@@ -798,19 +853,30 @@
         remaining.splice(nearestIdx, 1);
       }
 
-      totalDist += (calcDistance(current, currentActiveFactory) * 1.15);
-      updateMapDisplay(ordered);
+      totalDist += calcDistance(current, currentActiveFactory) * 1.15;
+      const savedKm = Math.max(0, baselineKm - totalDist);
+      const reductionPct = baselineKm > 0 ? (savedKm / baselineKm) * 100 : 0;
+      const fuelLiters = savedKm * 0.22;
+      const co2Kg = fuelLiters * 2.68;
+      lastRouteMetrics = { baselineKm, optimizedKm: totalDist, savedKm, fuelLiters, co2Kg, reductionPct };
 
+      updateMapDisplay(ordered);
       stopsCount.innerText = `${ordered.length} محطات`;
       metricDist.innerText = `${totalDist.toFixed(1)} كم`;
       metricTime.innerText = `${Math.round((totalDist / 40) * 60 + (ordered.length * 15))} د`;
       truckCounter.innerText = `${totalWeight.toFixed(1)} طن / 10 طن`;
-      metricFuel.innerText = `${Math.min(42, 18 + ordered.length * 6)}%`;
+      metricFuel.innerText = `${reductionPct.toFixed(0)}%`;
 
-      dispatchBtn.disabled = false;
-      dispatchBtn.className = "w-full py-3 bg-brand-gold text-brand-green font-extrabold text-xs rounded-xl shadow cursor-pointer";
+      dispatchBtn.disabled = totalWeight > 10;
+      dispatchBtn.className = totalWeight > 10
+        ? "w-full py-3 bg-red-100 text-red-600 font-extrabold text-xs rounded-xl cursor-not-allowed"
+        : "w-full py-3 bg-brand-gold text-brand-green font-extrabold text-xs rounded-xl shadow cursor-pointer";
+      if (totalWeight > 10) dispatchBtn.querySelector('span').innerText = 'الحمولة تتجاوز 10 طن — عدّل الاختيار';
+      else dispatchBtn.querySelector('span').innerText = 'اعتماد التوصية وإشعار المزارع';
+
       completeBtn.classList.remove('hidden');
-      completeBtn.disabled = false;
+      completeBtn.disabled = totalWeight > 10;
+      updateAgentDecisionCard(ordered, totalWeight, totalDist);
     }
 
     function dispatchTruck() {
@@ -824,10 +890,12 @@
       document.getElementById('farmer-accepted-notification').classList.remove('hidden');
       renderFarms();
       renderFarmerOrders();
-      alert("🚚 تم قبول الطلبات وتحديد المسار الأقصر لسائق شاحنة المصنع!");
+      alert("🚚 تم اعتماد توصية الوكيل وإرسال إشعار للمزارع. المسار المعروض محاكاة Prototype حتى ربط Routing API فعلي.");
     }
 
     function completeCurrentPickups() {
+      if (selectedFarmIds.length === 0) return;
+      const route = { ...lastRouteMetrics };
       let addedWeight = 0;
       farmsData.filter(f => selectedFarmIds.includes(f.id)).forEach(f => {
         f.status = 'completed';
@@ -835,9 +903,11 @@
         completedPickups.push({ ...f, completedAt: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) });
       });
 
-      totalWasteCollected += addedWeight;
-      totalCarbonReduced += (addedWeight * 1.36);
-      totalFuelSaved += Math.round(addedWeight * 10);
+      impactStats.matchedTons += addedWeight;
+      impactStats.savedKm += route.savedKm;
+      impactStats.fuelLiters += route.fuelLiters;
+      impactStats.co2Kg += route.co2Kg;
+      impactStats.reductionPct = route.reductionPct;
       updateReportValues();
 
       selectedFarmIds = [];
@@ -845,14 +915,18 @@
       renderFarmerOrders();
       renderCompletedPickups();
       computeOptimalRoute();
-      alert(`✅ تم إتمام الاستلام بنجاح وتحديث أرقام خفض الكربون (+${addedWeight.toFixed(1)} طن)!`);
+      alert(`✅ تم إتمام الاستلام (+${addedWeight.toFixed(1)} طن). تم تحديث مؤشرات أثر النقل التجريبية بحسابات المسافة والوقود فقط.`);
     }
 
     function updateReportValues() {
-      document.getElementById('kpi-carbon-saved').innerText = `${totalCarbonReduced.toFixed(1)} طن`;
-      document.getElementById('kpi-waste-saved').innerText = `${totalWasteCollected.toFixed(1)} طن`;
-      document.getElementById('kpi-fuel-saved').innerText = `${totalFuelSaved} لتر`;
-      document.getElementById('kpi-trees-equiv').innerText = `${Math.round(totalCarbonReduced * 45.5)} شجرة`;
+      const matched = document.getElementById('kpi-waste-saved');
+      const reduction = document.getElementById('kpi-route-reduction');
+      const fuel = document.getElementById('kpi-fuel-saved');
+      const co2 = document.getElementById('kpi-carbon-saved');
+      if (matched) matched.innerText = `${impactStats.matchedTons.toFixed(1)} طن`;
+      if (reduction) reduction.innerText = `${impactStats.reductionPct.toFixed(0)}%`;
+      if (fuel) fuel.innerText = `${impactStats.fuelLiters.toFixed(1)} لتر`;
+      if (co2) co2.innerText = `${impactStats.co2Kg.toFixed(1)} كجم`;
     }
 
     function renderCompletedPickups() {
@@ -990,8 +1064,95 @@
       }
     }
 
+    let activeFactoryDemand = null;
+
+    function createFactoryDemand() {
+      const type = document.getElementById('factory-demand-type').value;
+      const qty = Math.min(10, Math.max(1, parseFloat(document.getElementById('factory-demand-qty').value) || 1));
+      const frequency = document.getElementById('factory-demand-frequency').value;
+      const radius = parseFloat(document.getElementById('factory-demand-radius').value) || 35;
+      activeFactoryDemand = { type, qty, frequency, radius };
+
+      const matches = farmsData
+        .filter(f => f.status === 'pending' && f.wasteType === type && calcDistance(currentActiveFactory, f) <= radius)
+        .sort((a,b) => calcDistance(currentActiveFactory,a) - calcDistance(currentActiveFactory,b));
+
+      selectedFarmIds = [];
+      let total = 0;
+      for (const f of matches) {
+        if (total >= qty || total + f.weight > 10) break;
+        selectedFarmIds.push(f.id);
+        total += f.weight;
+      }
+
+      const freqLabel = frequency === 'weekly' ? 'أسبوعي' : frequency === 'monthly' ? 'شهري' : 'حالي';
+      const status = document.getElementById('demand-agent-status');
+      status.innerHTML = `<strong>طلب ${freqLabel}:</strong> ${qty} طن ${type} ضمن ${radius} كم.<br>وجد الوكيل <strong>${selectedFarmIds.length}</strong> عروض بإجمالي <strong>${total.toFixed(1)} طن</strong>.` +
+        (total < qty ? `<br><button onclick="runProactiveSourcing()" class="mt-1 px-2 py-1 bg-brand-gold text-brand-green rounded-lg font-bold">البحث الاستباقي عن الكمية الناقصة</button>` : ' <span class="text-emerald-700 font-bold">✓ الكمية مناسبة للرحلة</span>');
+      renderFarms();
+      computeOptimalRoute();
+    }
+
+    function runProactiveSourcing() {
+      const status = document.getElementById('demand-agent-status');
+      if (!activeFactoryDemand) return;
+      status.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i> الوكيل يراجع المزارع القريبة ويرسل طلب اهتمام تجريبي...';
+      setTimeout(() => {
+        const now = new Date();
+        const simulated = {
+          id: 'agent_supply_' + Date.now(),
+          name: 'مزرعة استجابة الوكيل — محاكاة',
+          location: 'نطاق الأحساء — استجابة تجريبية',
+          wasteType: activeFactoryDemand.type,
+          wasteTitle: activeFactoryDemand.type === 'سعف' ? 'سعف نخيل — استجابة محاكاة' : 'كرب وجذوع — استجابة محاكاة',
+          weight: Math.min(2.5, activeFactoryDemand.qty),
+          lat: 25.4050,
+          lng: 49.6400,
+          status: 'pending',
+          requestedAtDate: now.toLocaleDateString('ar-SA'),
+          requestedAtTime: now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+        };
+        farmsData.unshift(simulated);
+        if (!selectedFarmIds.includes(simulated.id)) selectedFarmIds.push(simulated.id);
+        status.innerHTML = '✅ <strong>Prototype:</strong> تمت محاكاة استجابة مزرعة بعد تواصل الوكيل الاستباقي، وأضيف العرض للمطابقة.';
+        renderFarms();
+        computeOptimalRoute();
+      }, 900);
+    }
+
+    function updateAgentDecisionCard(ordered, totalWeight, totalDistance) {
+      const summary = document.getElementById('agent-decision-summary');
+      if (!summary) return;
+      if (!ordered || ordered.length === 0) {
+        summary.innerHTML = 'اختر المزارع أو أنشئ طلب مصنع ليبني الوكيل توصية.';
+        return;
+      }
+      summary.innerHTML = `<strong>${ordered.length} مزارع</strong> • <strong>${totalWeight.toFixed(1)} طن</strong> • مسار مقترح <strong>${totalDistance.toFixed(1)} كم</strong><br>خفض مسافة تقديري: <strong>${lastRouteMetrics.reductionPct.toFixed(0)}%</strong> مقارنة برحلات مستقلة. ${totalWeight > 10 ? '<span class="text-red-200">الحمولة تتجاوز السعة.</span>' : '<span class="text-brand-gold">ضمن سعة الشاحنة.</span>'}`;
+    }
+
+    function approveAgentRecommendation() {
+      if (selectedFarmIds.length === 0) return alert('أنشئ طلب مصنع أو اختر مزارع أولاً.');
+      if (selectedFarmIds.reduce((sum,id) => sum + (farmsData.find(f=>f.id===id)?.weight || 0),0) > 10) return alert('الحمولة تتجاوز 10 طن. عدّل التوصية أولاً.');
+      document.getElementById('agent-feedback').classList.remove('hidden');
+      document.getElementById('agent-feedback').innerText = '✓ تم اعتماد توصية الوكيل. سيتم استخدام هذا القرار كإشارة Feedback في النسخة القادمة.';
+      dispatchTruck();
+    }
+
+    function modifyAgentRecommendation() {
+      if (selectedFarmIds.length === 0) return alert('لا توجد توصية لتعديلها.');
+      const removedId = selectedFarmIds[selectedFarmIds.length - 1];
+      const removed = farmsData.find(f => f.id === removedId);
+      selectedFarmIds = selectedFarmIds.filter(id => id !== removedId);
+      const fb = document.getElementById('agent-feedback');
+      fb.classList.remove('hidden');
+      fb.innerHTML = `تم تعديل التوصية يدويًا وإزالة <strong>${removed ? removed.name : 'آخر محطة'}</strong>. تم تسجيل سبب افتراضي: "مراجعة تشغيلية من المصنع".`;
+      renderFarms();
+      computeOptimalRoute();
+    }
+
     // WhatsApp Bot logic
     let waStep = 0;
+    let waMode = "text";
     function appendWaMessage(sender, text) {
       const chat = document.getElementById('whatsapp-chat-box');
       const div = document.createElement('div');
@@ -1001,8 +1162,29 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
+    function simulateVoiceNoteFlow() {
+      restartWhatsAppDemo();
+      waMode = 'voice';
+      const btn = document.getElementById('wa-next-step-btn');
+      const voiceBtn = document.getElementById('wa-voice-btn');
+      appendWaMessage('user', '<div class="flex items-center gap-2"><i class="fa-solid fa-microphone text-[#075E54]"></i><div><strong>0:06 رسالة صوتية</strong><br><span class="text-[9px] text-gray-500">"عندي تقريبًا أربع طن سعف في مزرعتي بالقارة"</span></div></div>');
+      voiceBtn.disabled = true;
+      btn.disabled = true;
+      document.getElementById('wa-action-hint').innerText = 'محاكاة تحويل الصوت إلى بيانات منظمة...';
+      setTimeout(() => {
+        appendWaMessage('bot', '🎙️ <strong>تم تحليل الرسالة الصوتية — Prototype Simulation</strong><br>• النوع: سعف نخيل<br>• الكمية المذكورة: قرابة 4 طن<br>• الموقع النصي: القارة<br><br>باقي خطوة واحدة: شاركني موقع بوابة المزرعة للتأكيد.');
+        btn.disabled = false;
+        btn.innerText = 'إرسال: مشاركة موقع المزرعة 📍';
+        document.getElementById('wa-action-hint').innerText = 'أكد البيانات بمشاركة الموقع:';
+        waStep = 30;
+      }, 900);
+    }
+
     function restartWhatsAppDemo() {
       waStep = 0;
+      waMode = "text";
+      const voiceBtn = document.getElementById('wa-voice-btn');
+      if (voiceBtn) voiceBtn.disabled = false;
       document.getElementById('whatsapp-chat-box').innerHTML = `<div class="text-center"><span class="bg-[#FFEECD] text-gray-600 text-[9px] px-2.5 py-0.5 rounded shadow-sm">🔒 المحادثة التفاعلية لخدمة كبار السن لرفع الطلب</span></div>`;
       document.getElementById('wa-next-step-btn').innerHTML = `إرسال: "السلام عليكم، عندي مخلفات نخل أبي أرفع طلب" 💬`;
       document.getElementById('wa-action-hint').innerText = "ابدأ كصاحب مزرعة:";
@@ -1011,6 +1193,35 @@
     function nextWhatsAppStep() {
       const btn = document.getElementById('wa-next-step-btn');
       const hint = document.getElementById('wa-action-hint');
+
+      if (waStep === 30) {
+        appendWaMessage('user', '📍 تم إرسال موقع بوابة المزرعة — القارة، الأحساء');
+        btn.disabled = true;
+        setTimeout(() => {
+          const now = new Date();
+          farmsData.unshift({
+            id: 'voice_' + Date.now(),
+            name: 'مزرعة الرسالة الصوتية — القارة',
+            location: 'القارة، الأحساء (عبر Voice Note)',
+            wasteType: 'سعف',
+            wasteTitle: 'سعف نخيل — كمية مؤكدة 4 طن',
+            weight: 4.0,
+            lat: 25.4150,
+            lng: 49.6920,
+            status: 'pending',
+            requestedAtDate: now.toLocaleDateString('ar-SA'),
+            requestedAtTime: now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+          });
+          renderFarms();
+          renderFarmerOrders();
+          appendWaMessage('bot', '✅ تم إنشاء Supply Request من الرسالة الصوتية بعد تأكيد الموقع.<br><span class="text-[9px] text-gray-500">هذا التدفق محاكاة Prototype لميزة Speech-to-Text واستخراج البيانات.</span>');
+          btn.disabled = false;
+          btn.innerText = 'الانتقال للوحة المصنع لرؤية الطلب 🏭';
+          hint.innerText = 'اكتملت رحلة الرسالة الصوتية.';
+          waStep = 4;
+        }, 800);
+        return;
+      }
 
       if (waStep === 0) {
         appendWaMessage('user', 'السلام عليكم، عندي مخلفات نخل في المزرعة وأبي أرفع طلب جمع للمصانع.');
