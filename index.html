@@ -273,13 +273,33 @@
               <button type="button" onclick="openApiKeyModal()" class="text-[9.5px] text-gray-500 hover:text-brand-gold font-bold flex items-center gap-1">
                 <i class="fa-solid fa-key text-brand-gold text-[10px]"></i>
                 <span id="api-indicator-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span>اتصال API</span>
+                <span>المحلّل نشط</span>
               </button>
             </div>
 
             <!-- Hidden File and Camera Inputs -->
             <input type="file" id="farmer-file-input" accept="image/*" class="hidden" onchange="handleFarmerImageUpload(event)">
             <input type="file" id="farmer-camera-input" accept="image/*" capture="environment" class="hidden" onchange="handleFarmerImageUpload(event)">
+
+            <!-- Site dimensions are optional, but required for a site-specific mass estimate. -->
+            <details class="mt-2 mb-2 border border-brand-gold/30 bg-brand-beigeLight rounded-xl p-2">
+              <summary class="text-[10.5px] font-black text-brand-green cursor-pointer">📏 تحسين دقة الوزن: أبعاد الكومة ونوع المخلف (اختياري)</summary>
+              <div class="mt-2">
+                <label class="text-[10px] text-brand-green font-bold block mb-1">نوع المخلف إن كان معروفًا</label>
+                <select id="material-hint" class="w-full bg-white rounded-lg border border-brand-gold/20 p-1.5 text-xs">
+                  <option value="">تحديد أولي من الصورة</option>
+                  <option value="سعف">سعف</option><option value="كرب">كرب</option>
+                  <option value="عذق">عذق</option><option value="ليف">ليف</option>
+                  <option value="جذع">جذع</option><option value="مخلفات مختلطة">مخلفات مختلطة</option>
+                </select>
+                <div class="grid grid-cols-3 gap-1.5 mt-2">
+                  <label class="text-[9px] text-brand-green font-bold">الطول (م)<input id="pile-length" inputmode="decimal" type="number" min="0.1" max="40" step="0.1" placeholder="مثال 3" class="mt-1 w-full bg-white border border-gray-200 rounded-lg p-1.5 text-xs"></label>
+                  <label class="text-[9px] text-brand-green font-bold">العرض (م)<input id="pile-width" inputmode="decimal" type="number" min="0.1" max="40" step="0.1" placeholder="مثال 2" class="mt-1 w-full bg-white border border-gray-200 rounded-lg p-1.5 text-xs"></label>
+                  <label class="text-[9px] text-brand-green font-bold">الارتفاع (م)<input id="pile-height" inputmode="decimal" type="number" min="0.1" max="40" step="0.1" placeholder="مثال 1" class="mt-1 w-full bg-white border border-gray-200 rounded-lg p-1.5 text-xs"></label>
+                </div>
+                <button type="button" onclick="reRunActiveImageAnalysis()" class="mt-2 w-full bg-brand-green text-white py-1.5 rounded-lg text-[10px] font-bold">إعادة حساب الوزن للصورة</button>
+              </div>
+            </details>
 
             <!-- Upload Dropzone / Action Box -->
             <div id="camera-dropzone" 
@@ -296,7 +316,7 @@
                 <div>
                   <p class="font-black text-brand-green text-xs">التقط صورة المخلفات أو اختر من جهازك</p>
                   <p class="text-[9.5px] text-gray-500 mt-0.5 leading-relaxed">
-                    النظام يقيس الحجم والكثافة ويستخرج <span class="font-black text-brand-gold">الأوزان الثلاثة</span> بالذكاء الاصطناعي
+                    تحليل بصري لخصائص الصورة، وتقدير الوزن بحساب الحجم والكثافة
                   </p>
                 </div>
 
@@ -341,8 +361,8 @@
                     <div class="w-9 h-9 rounded-full bg-brand-gold/90 text-brand-green flex items-center justify-center text-base animate-spin shadow-lg mb-1.5">
                       <i class="fa-solid fa-spinner"></i>
                     </div>
-                    <span class="text-[11px] font-black drop-shadow" id="ai-loading-step">جاري الاتصال بـ Google Gemini 3.8 Flash...</span>
-                    <span class="text-[9px] text-brand-beige drop-shadow mt-0.5">معايرة مقياس الخلفية وحساب الأبعاد الحجمية</span>
+                    <span class="text-[11px] font-black drop-shadow" id="ai-loading-step">جاري قراءة خصائص الصورة...</span>
+                    <span class="text-[9px] text-brand-beige drop-shadow mt-0.5">فحص الألوان والملمس والحجم المرجعي</span>
                   </div>
                 </div>
               </div>
@@ -1201,7 +1221,7 @@
       try {
         const res = await fetch('/api/health', {cache: 'no-store'});
         const data = await res.json();
-        ready = res.ok && Boolean(data.gemini_configured);
+        ready = res.ok && Boolean(data.vision_estimator_active);
       } catch (e) { ready = false; }
       geminiServerConfigured = ready;
       const dot = document.getElementById('api-indicator-dot');
@@ -1398,10 +1418,10 @@
       if (loadingBox) loadingBox.classList.remove('hidden');
 
       const steps = [
-        "📸 قراءة أبعاد الصورة وتجهيز مقاييس الرؤية الحاسوبية...",
-        "🔍 إرسال الصورة إلى Google Gemini Vision عبر السيرفر...",
-        "📐 معايرة المقياس وحساب أبعاد الكومة الحجمية (m³)...",
-        "⚖️ استخراج الأوزان الثلاثة وفترات الثقة لمخلفات النخيل..."
+        "📸 قراءة أبعاد الصورة وبياناتها...",
+        "🔍 فحص ألوان الصورة وملمس المخلفات...",
+        "📐 حساب حجم الكومة وفق الأبعاد المتاحة...",
+        "⚖️ حساب نطاق الوزن وفق كثافة نوع المخلف..."
       ];
 
       let stepIdx = 0;
@@ -1412,11 +1432,15 @@
 
       let lastError = null;
       let rawJsonResult = null;
+      const dimensionInputs = ['pile-length','pile-width','pile-height'].map(id => Number(document.getElementById(id)?.value) || 0);
+      const dimensions = dimensionInputs.every(x => x >= .1 && x <= 40)
+        ? {length:dimensionInputs[0],width:dimensionInputs[1],height:dimensionInputs[2]} : null;
+      const materialHint = document.getElementById('material-hint')?.value || null;
       try {
         const res = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64Data, mime_type: mimeType || 'image/jpeg' })
+          body: JSON.stringify({ image: base64Data, mime_type: mimeType || 'image/jpeg', dimensions, material_hint: materialHint })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -1432,7 +1456,7 @@
       if (!rawJsonResult) {
         if (loadingBox) loadingBox.classList.add('hidden');
         if (idleBox) idleBox.classList.remove('hidden');
-        alert(`❌ تعذر تحليل الصورة عبر Google Gemini.\nالسبب: ${lastError || 'خطأ غير معروف'}\nتأكد من صحة مفتاح الـ API والاتصال بالإنترنت.`);
+        alert(`تعذر قراءة الصورة. السبب: ${lastError || 'خطأ غير معروف'}. حاول مرة أخرى.`);
         return;
       }
 
@@ -1459,12 +1483,14 @@
       } catch (parseErr) {
         if (loadingBox) loadingBox.classList.add('hidden');
         if (previewBox) previewBox.classList.remove('hidden');
-        alert("تم استلام رد من Google Gemini ولكن تعذر قراءة بنية الـ JSON: " + parseErr.message);
+        alert("تعذر عرض نتيجة تحليل الصورة: " + parseErr.message);
         console.error("Raw response:", rawJsonResult);
       }
     }
 
     function renderGeminiAnalysisResults(data, rawText) {
+      // Classification is a nearest-reference pixel-texture guess; dimensions determine mass.
+
       // Only a functioning vision model can infer waste types from image pixels.
       // Offline demo shows illustrative categories, not detections.
       const totalEstKg = Number(data.total_estimated_weight_kg) || 0;
