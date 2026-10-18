@@ -24,11 +24,10 @@ def gemini_request(url, payload=None):
     key = api_key()
     if not key:
         raise RuntimeError('مفتاح Gemini API غير مضبوط على السيرفر.')
-    url += ('&' if '?' in url else '?') + 'key=' + key
     post_data = json.dumps(payload).encode('utf-8') if payload is not None else None
     req = request.Request(
         url, data=post_data,
-        headers={'Content-Type':'application/json'} if post_data is not None else {},
+        headers=({'Content-Type':'application/json','x-goog-api-key':key} if post_data is not None else {'x-goog-api-key':key}),
         method='POST' if post_data is not None else 'GET'
     )
     try:
