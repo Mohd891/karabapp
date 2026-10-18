@@ -5,7 +5,7 @@ from pathlib import Path
 from collections import defaultdict, deque
 from urllib import request, error
 from urllib.parse import urlparse
-import os, json, base64, binascii, time, threading
+import os, json, base64, binascii, time, threading, hashlib
 
 ROOT = Path(__file__).resolve().parent
 PROMPT = (ROOT / 'gemini_prompt.txt').read_text(encoding='utf-8')
@@ -38,6 +38,27 @@ def gemini_request(url, payload=None):
         except Exception: data = {}
         detail = str((data.get('error') or {}).get('message', 'Google API request failed'))
         raise ValueError('Google Gemini HTTP ' + str(exc.code) + ': ' + detail.replace(key, '[REDACTED]')[:300]) from None
+
+def example_estimate(image_bytes):
+    """Clearly-labeled offline demo, never a real computer vision measurement."""
+    seed = int.from_bytes(hashlib.sha256(image_bytes).digest()[:4], 'big')
+    # Sample numbers vary to illustrate the flow, NOT according to image content.
+    total = 200 + (seed % 16) * 25
+    palm = round(total * 0.64)
+    base = total - palm
+    return {
+      'demo_mode': True,
+      'demo_disclaimer': 'محاكاة تجريبية لعرض رحلة التطبيق فقط؛ لم تُحلّل الصورة بالذكاء الاصطناعي ولا يُستدل بهذه الأرقام على وزن المخلفات.',
+      'detected_materials': ['مخلفات نخيل (افتراضية)', 'سعف وكرب (افتراضي)'],
+      'scale_reference_used': 'لا يوجد مقياس مرجعي. القيم مثال توضيحي وليست قياسات من الصورة.',
+      'analysis_breakdown': [
+        {'material':'سعف (مثال)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(palm/100, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':palm},
+        {'material':'كرب (مثال)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(base/250, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':base}
+      ],
+      'total_estimated_weight_kg':total,
+      'confidence_interval_kg':{'min':round(total*0.4),'max':round(total*2.0)},
+      'confidence_score':'Low'
+    }
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -75,8 +96,6 @@ class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
         if urlparse(self.path).path != '/api/analyze':
             return self.json_response(404, {'error':'Not Found'})
-        if not api_key():
-            return self.json_response(503, {'error':'GEMINI_API_KEY غير مضبوط في السيرفر.'})
         try: size = int(self.headers.get('Content-Length','0'))
         except ValueError: size = 0
         if not 0 < size <= MAX_BODY:
@@ -100,6 +119,8 @@ class Handler(SimpleHTTPRequestHandler):
             if len(bucket) >= RATE_LIMIT_PER_HOUR:
                 return self.json_response(429, {'error':'عدد محاولات التحليل تجاوز الحد التجريبي.'})
             bucket.append(now)
+        if not api_key():
+            return self.json_response(200, {'text':json.dumps(example_estimate(img_bytes),ensure_ascii=False),'demo_mode':True})
         payload = {
             'contents':[{'parts':[{'text':PROMPT},{'inline_data':{'mime_type':mime,'data':image}}]}],
             'generationConfig':{'response_mime_type':'application/json'}
@@ -115,7 +136,7 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception as exc:
                 failures.append(str(exc))
                 if any(x in str(exc) for x in ('401','403','429')): break
-        return self.json_response(502, {'error':failures[-1] if failures else 'تعذر الاتصال بـGemini.'})
+        return self.json_response(200, {'text':json.dumps(example_estimate(img_bytes),ensure_ascii=False),'demo_mode':True, 'api_error':'Gemini unavailable'})
 
 def _startup_gemini_check():
     """One cheap auth check, logged without exposing the key."""
