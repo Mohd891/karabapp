@@ -5,7 +5,8 @@ from pathlib import Path
 from collections import defaultdict, deque
 from urllib import request, error
 from urllib.parse import urlparse
-import os, json, base64, binascii, time, threading, hashlib
+import os, json, base64, binascii, time, threading
+from vision_estimator import analyze_pixels
 
 ROOT = Path(__file__).resolve().parent
 PROMPT = (ROOT / 'gemini_prompt.txt').read_text(encoding='utf-8')
@@ -39,27 +40,6 @@ def gemini_request(url, payload=None):
         detail = str((data.get('error') or {}).get('message', 'Google API request failed'))
         raise ValueError('Google Gemini HTTP ' + str(exc.code) + ': ' + detail.replace(key, '[REDACTED]')[:300]) from None
 
-def example_estimate(image_bytes):
-    """Clearly-labeled offline demo, never a real computer vision measurement."""
-    seed = int.from_bytes(hashlib.sha256(image_bytes).digest()[:4], 'big')
-    # Sample numbers vary to illustrate the flow, NOT according to image content.
-    total = 200 + (seed % 16) * 25
-    palm = round(total * 0.64)
-    base = total - palm
-    return {
-      'demo_mode': True,
-      'demo_disclaimer': 'محاكاة تجريبية لعرض رحلة التطبيق فقط؛ لم تُحلّل الصورة بالذكاء الاصطناعي ولا يُستدل بهذه الأرقام على وزن المخلفات.',
-      'detected_materials': ['النوع غير محدد من الصورة', 'سعف / كرب / عذق: احتمالات تحتاج تحقق'],
-      'scale_reference_used': 'لا يوجد مقياس مرجعي. القيم مثال توضيحي وليست قياسات من الصورة.',
-      'analysis_breakdown': [
-        {'material':'سعف (افتراض غير مؤكد)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(palm/100, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':palm},
-        {'material':'كرب (افتراض غير مؤكد)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(base/250, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':base}
-      ],
-      'total_estimated_weight_kg':total,
-      'confidence_interval_kg':{'min':round(total*0.4),'max':round(total*2.0)},
-      'confidence_score':'Low'
-    }
-
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -77,16 +57,9 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == '/api/health':
-            return self.json_response(200, {'status':'ok','gemini_configured':bool(api_key())})
+            return self.json_response(200, {'status':'ok','vision_estimator_active':True,'gemini_configured':bool(api_key())})
         if path == '/api/test':
-            if not api_key():
-                return self.json_response(503, {'error':'GEMINI_API_KEY غير مضبوط في السيرفر.'})
-            try:
-                data = gemini_request('https://generativelanguage.googleapis.com/v1beta/models')
-                models = [m.get('name','').removeprefix('models/') for m in data.get('models',[]) if 'generateContent' in m.get('supportedGenerationMethods',[])]
-                return self.json_response(200, {'status':'ok', 'models':models[:15]})
-            except Exception as exc:
-                return self.json_response(502, {'error':str(exc)})
+            return self.json_response(200, {'status':'ok','engine':'image-pixel-analysis'})
         if path == '/': path = '/index.html'
         if '..' in path or path.lstrip('/') not in ALLOWED:
             return self.send_error(404, 'Not Found')
@@ -119,24 +92,18 @@ class Handler(SimpleHTTPRequestHandler):
             if len(bucket) >= RATE_LIMIT_PER_HOUR:
                 return self.json_response(429, {'error':'عدد محاولات التحليل تجاوز الحد التجريبي.'})
             bucket.append(now)
-        if not api_key():
-            return self.json_response(200, {'text':json.dumps(example_estimate(img_bytes),ensure_ascii=False),'demo_mode':True})
-        payload = {
-            'contents':[{'parts':[{'text':PROMPT},{'inline_data':{'mime_type':mime,'data':image}}]}],
-            'generationConfig':{'response_mime_type':'application/json'}
-        }
-        failures = []
-        for model in MODELS:
-            try:
-                output = gemini_request('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent',payload)
-                parts = (output.get('candidates') or [{}])[0].get('content',{}).get('parts',[])
-                result = next((p.get('text') for p in parts if p.get('text')),None)
-                if not result: raise ValueError('لم يرجع Gemini نتيجة مفهومة.')
-                return self.json_response(200, {'model':model,'text':result})
-            except Exception as exc:
-                failures.append(str(exc))
-                if any(x in str(exc) for x in ('401','403','429')): break
-        return self.json_response(200, {'text':json.dumps(example_estimate(img_bytes),ensure_ascii=False),'demo_mode':True, 'api_error':'Gemini unavailable'})
+        try:
+            result = analyze_pixels(img_bytes, obj.get('dimensions'), obj.get('material_hint'))
+            return self.json_response(200, {
+                'text':json.dumps(result, ensure_ascii=False),
+                'analysis_method':result['analysis_method'],
+                'demo_mode':False
+            })
+        except ValueError as exc:
+            return self.json_response(400, {'error':str(exc)})
+        except Exception as exc:
+            print('Visual analysis failed:',repr(exc),flush=True)
+            return self.json_response(500, {'error':'حدث خطأ أثناء قراءة الصورة. جرّب صورة JPG أخرى.'})
 
 def _startup_gemini_check():
     """One cheap auth check, logged without exposing the key."""
@@ -151,5 +118,13 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT','3000'))
     app = ThreadingHTTPServer(('0.0.0.0',port),Handler)
     print('Karab API serving on port',port,flush=True)
-    if api_key(): threading.Thread(target=_startup_gemini_check,daemon=True).start()
+    try:
+        from PIL import Image
+        from io import BytesIO
+        img = Image.new('RGB',(128,128),(156,102,58))
+        buf = BytesIO(); img.save(buf,format='JPEG')
+        test = analyze_pixels(buf.getvalue())
+        print('Pixel analyzer self-check OK:',test['detected_materials'][0],flush=True)
+    except Exception as exc:
+        print('Pixel analyzer self-check FAILED:',repr(exc),flush=True)
     app.serve_forever()
