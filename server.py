@@ -49,11 +49,11 @@ def example_estimate(image_bytes):
     return {
       'demo_mode': True,
       'demo_disclaimer': 'محاكاة تجريبية لعرض رحلة التطبيق فقط؛ لم تُحلّل الصورة بالذكاء الاصطناعي ولا يُستدل بهذه الأرقام على وزن المخلفات.',
-      'detected_materials': ['مخلفات نخيل (افتراضية)', 'سعف وكرب (افتراضي)'],
+      'detected_materials': ['النوع غير محدد من الصورة', 'سعف / كرب / عذق: احتمالات تحتاج تحقق'],
       'scale_reference_used': 'لا يوجد مقياس مرجعي. القيم مثال توضيحي وليست قياسات من الصورة.',
       'analysis_breakdown': [
-        {'material':'سعف (مثال)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(palm/100, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':palm},
-        {'material':'كرب (مثال)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(base/250, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':base}
+        {'material':'سعف (افتراض غير مؤكد)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(palm/100, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':palm},
+        {'material':'كرب (افتراض غير مؤكد)','estimation_method':'volumetric_pile','estimated_dimensions_or_count':'حجم افتراضي غير مستخرج من الصورة','estimated_volume_m3':round(base/250, 1),'packing_or_moisture_notes':'كثافة افتراضية للعرض','estimated_weight_kg':base}
       ],
       'total_estimated_weight_kg':total,
       'confidence_interval_kg':{'min':round(total*0.4),'max':round(total*2.0)},
