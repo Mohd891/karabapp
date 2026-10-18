@@ -888,7 +888,7 @@
     function initMap() {
       if (mapInstance) return;
       mapInstance = L.map('map', { center: [25.45, 49.62], zoom: 10, zoomControl: false });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(mapInstance);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(mapInstance);
       markersLayerGroup = L.layerGroup().addTo(mapInstance);
       routeLayerGroup = L.layerGroup().addTo(mapInstance);
     }
@@ -896,7 +896,7 @@
     function initFarmerMap() {
       if (farmerMapInstance) return;
       farmerMapInstance = L.map('farmer-map', { center: [selectedFarmerLocation.lat, selectedFarmerLocation.lng], zoom: 12, zoomControl: false });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(farmerMapInstance);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(farmerMapInstance);
 
       const markerIcon = L.divIcon({
         html: `<div style="background-color:#C99A3D; color:#12372A; border:2px solid #12372A; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px;">📍</div>`,
@@ -1711,9 +1711,9 @@
       }
 
       if (tab === 'factory') {
-        setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(); }, 150);
+        setTimeout(() => { if (mapInstance) mapInstance.invalidateSize(true); }, 250);
       } else if (tab === 'farmer') {
-        setTimeout(() => { if (farmerMapInstance) farmerMapInstance.invalidateSize(); }, 150);
+        setTimeout(() => { if (farmerMapInstance) farmerMapInstance.invalidateSize(true); }, 250);
       }
     }
 
