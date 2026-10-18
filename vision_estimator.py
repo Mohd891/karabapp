@@ -104,7 +104,7 @@ def analyze_pixels(image_bytes, dimensions=None, material_hint=None):
        "analysis_breakdown":breakdown,
        "total_estimated_weight_kg":int(total),
        "confidence_interval_kg":{"min":low,"max":high},
-       "confidence_score":"Low" if not measured or best_distance>.45 else "Medium",
+       "confidence_score":"Medium" if best_label != "غير محدد" and best_distance <= 0.75 else "Low",
        "classification_note":"تصنيف بصري أولي من لون وملمس الصورة؛ راجع نوع المخلف قبل اعتماد الطلب.",
        "image_observations":{"width_px":orig_width,"height_px":orig_height,
           "brown_pixels_pct":round(float(features[0])*100,1),
