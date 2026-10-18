@@ -10,6 +10,13 @@ from vision_estimator import analyze_pixels
 
 ROOT = Path(__file__).resolve().parent
 PROMPT = (ROOT / 'gemini_prompt.txt').read_text(encoding='utf-8')
+SAMPLE_IMAGES = {
+    '822508f7-207b-4d94-9b67-01d1f83443d6.JPG': 'https://d2ol7oe51mr4n9.cloudfront.net/user_3Js0ef5X6VEXugCB0S2ySgXrfMW/b8e9a9ef-8c52-4e60-84ee-fc8ad1730306.jpg',
+    '07204f96-db2d-49e7-89fd-9f6ce4cae45f.JPG': 'https://d2ol7oe51mr4n9.cloudfront.net/user_3Js0ef5X6VEXugCB0S2ySgXrfMW/33c5e965-19ab-403d-a48f-a155df1a5239.jpg',
+    'bfddac2a-291b-4212-ab78-07bc929a9291.JPG': 'https://d2ol7oe51mr4n9.cloudfront.net/user_3Js0ef5X6VEXugCB0S2ySgXrfMW/25f3b48a-369f-41d7-a600-a621afc1cb78.jpg'
+}
+SAMPLE_CACHE = {}
+
 ALLOWED = {'index.html', 'carabapp.html', 'favicon.ico'} | {p.name for p in ROOT.glob('*.JPG')}
 MODELS = ['gemini-2.5-flash', 'gemini-flash-latest']
 MAX_BODY = 12 * 1024 * 1024
@@ -60,6 +67,26 @@ class Handler(SimpleHTTPRequestHandler):
             return self.json_response(200, {'status':'ok','vision_estimator_active':True,'gemini_configured':bool(api_key())})
         if path == '/api/test':
             return self.json_response(200, {'status':'ok','engine':'image-pixel-analysis'})
+        sample = SAMPLE_IMAGES.get(path.lstrip('/'))
+        if sample:
+            try:
+                if sample not in SAMPLE_CACHE:
+                    with request.urlopen(sample,timeout=12) as resp:
+                        data = resp.read(500000)
+                    if len(data)<50000 or len(data)>499999:
+                        raise ValueError('sample image size')
+                    SAMPLE_CACHE[sample]=data
+                data=SAMPLE_CACHE[sample]
+                self.send_response(200)
+                self.send_header('Content-Type','image/jpeg')
+                self.send_header('Content-Length',str(len(data)))
+                self.send_header('Cache-Control','public, max-age=3600')
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            except Exception as exc:
+                print('Sample image fetch failure:',str(exc)[:120],flush=True)
+                return self.send_error(503,'Sample temporarily unavailable')
         if path == '/': path = '/index.html'
         if '..' in path or path.lstrip('/') not in ALLOWED:
             return self.send_error(404, 'Not Found')
