@@ -117,8 +117,18 @@ class Handler(SimpleHTTPRequestHandler):
                 if any(x in str(exc) for x in ('401','403','429')): break
         return self.json_response(502, {'error':failures[-1] if failures else 'تعذر الاتصال بـGemini.'})
 
+def _startup_gemini_check():
+    """One cheap auth check, logged without exposing the key."""
+    try:
+        data = gemini_request('https://generativelanguage.googleapis.com/v1beta/models')
+        n = len(data.get('models', []))
+        print('Gemini startup auth check OK; models returned:', n, flush=True)
+    except Exception as exc:
+        print('Gemini startup auth check failed:', str(exc)[:350], flush=True)
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT','3000'))
     app = ThreadingHTTPServer(('0.0.0.0',port),Handler)
     print('Karab API serving on port',port,flush=True)
+    if api_key(): threading.Thread(target=_startup_gemini_check,daemon=True).start()
     app.serve_forever()
