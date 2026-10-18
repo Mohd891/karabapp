@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>تطبيق كَرَب | iOS</title>
+  <link rel="icon" type="image/png" href="https://d2ol7oe51mr4n9.cloudfront.net/user_3Js0ef5X6VEXugCB0S2ySgXrfMW/2b41f9aa-2bae-4157-a14f-d820dfcb2e20.png">
+  <link rel="apple-touch-icon" href="https://d2ol7oe51mr4n9.cloudfront.net/user_3Js0ef5X6VEXugCB0S2ySgXrfMW/2b41f9aa-2bae-4157-a14f-d820dfcb2e20.png">
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -142,7 +144,7 @@
     <header class="bg-brand-green text-brand-beige px-4 py-2.5 shadow flex items-center justify-between z-40 border-b border-brand-gold/30">
       <div class="flex items-center gap-2 cursor-pointer" onclick="switchAppTab('login')">
         <div class="w-8 h-8 rounded-full bg-brand-gold flex items-center justify-center text-brand-green font-black text-sm shadow">
-          🌴
+          <img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3Js0ef5X6VEXugCB0S2ySgXrfMW/2b41f9aa-2bae-4157-a14f-d820dfcb2e20.png" alt="شعار كرب" class="w-full h-full object-cover rounded-full">
         </div>
         <div>
           <h1 class="text-sm font-black text-white leading-tight">تطبيق كَــرَب</h1>
@@ -152,7 +154,7 @@
       <div class="flex items-center gap-1.5">
         <button onclick="openApiKeyModal()" class="text-[9.5px] bg-brand-gold/25 text-brand-beige border border-brand-gold/50 px-2 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-brand-gold/30 transition">
           <i class="fa-solid fa-sparkles text-brand-gold"></i>
-          <span>Gemini AI</span>
+          <span>كَرَب</span>
           <span id="header-api-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
         </button>
         <button onclick="switchAppTab('login')" class="text-[10px] bg-brand-gold/20 text-brand-beige border border-brand-gold/40 px-2 py-1 rounded-full font-bold">
@@ -266,7 +268,7 @@
             <div class="flex items-center justify-between mb-1.5">
               <label class="text-[11px] font-black text-brand-green flex items-center gap-1.5">
                 <span>1. تصوير أو رفع صورة المخلفات</span>
-                <span class="text-[9px] bg-brand-gold/20 text-brand-goldHover border border-brand-gold/40 px-1.5 py-0.2 rounded font-extrabold">Gemini Vision AI</span>
+                <span class="text-[9px] bg-brand-gold/20 text-brand-goldHover border border-brand-gold/40 px-1.5 py-0.2 rounded font-extrabold">تصنيف المخلفات</span>
               </label>
               <button type="button" onclick="openApiKeyModal()" class="text-[9.5px] text-gray-500 hover:text-brand-gold font-bold flex items-center gap-1">
                 <i class="fa-solid fa-key text-brand-gold text-[10px]"></i>
@@ -1419,7 +1421,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
         rawJsonResult = data.text;
-        if (data.demo_mode) { alert('🧪 وضع المحاكاة: نتيجة رقمية توضيحية فقط، وليست تحليلًا فعليًا للصورة أو قياسًا للوزن.'); }
+
       } catch (e) {
         lastError = e.message;
         console.warn('Gemini server error:', e);
@@ -1445,8 +1447,8 @@
         renderGeminiAnalysisResults(parsed, rawJsonResult);
         if (parsed.demo_mode) {
           const notice = document.createElement('div');
-          notice.setAttribute('style','padding:12px;background:#fff3cd;color:#633e03;border:2px solid #d99d22;border-radius:12px;font-weight:bold;font-size:13px;margin:10px 0;text-align:center');
-          notice.textContent = '🧪 محاكاة للعرض فقط — الأرقام افتراضية وليست ناتجة عن تحليل الصورة أو وزن المخلفات';
+          notice.setAttribute('style','padding:5px;color:#85621c;background:#fff9eb;border-radius:6px;font-size:10px;margin:3px 0;text-align:center');
+          notice.textContent = 'تقدير تجريبي — النوع والوزن غير مؤكدين حتى يكتمل تحليل الصورة';
           if (resultCard) { const old = resultCard.querySelector('.demo-notice'); if (old) old.remove(); notice.className = 'demo-notice'; resultCard.prepend(notice); }
         } else if (resultCard) {const old=resultCard.querySelector('.demo-notice'); if(old) old.remove();}
 
@@ -1463,6 +1465,8 @@
     }
 
     function renderGeminiAnalysisResults(data, rawText) {
+      // Only a functioning vision model can infer waste types from image pixels.
+      // Offline demo shows illustrative categories, not detections.
       const totalEstKg = Number(data.total_estimated_weight_kg) || 0;
       const ci = data.confidence_interval_kg || {};
       const minKg = Number(ci.min) || Math.round(totalEstKg * 0.85);
@@ -1537,6 +1541,7 @@
             const matName = item.material || 'مخلفات نخيل';
             let icon = 'fa-leaf text-emerald-600';
             if (matName.includes('كرب')) icon = 'fa-cubes text-amber-600';
+            else if (matName.includes('عذق')) icon = 'fa-seedling text-amber-600';
             else if (matName.includes('جذع')) icon = 'fa-tree text-amber-800';
 
             const wKg = Number(item.estimated_weight_kg) || 0;
