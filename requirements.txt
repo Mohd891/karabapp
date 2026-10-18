@@ -1,1 +1,2 @@
-# Python standard library only
+Pillow>=11,<13
+numpy>=2.2,<3
