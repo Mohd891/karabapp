@@ -1384,15 +1384,6 @@
     }
 
     async function runGeminiVisionEstimation(base64Data, mimeType, imageName) {
-      if (!geminiServerConfigured) {
-        await updateApiKeyIndicators();
-        if (!geminiServerConfigured) {
-          openApiKeyModal();
-          alert('سيرفر Gemini غير مهيأ. أضف متغير البيئة GEMINI_API_KEY على السيرفر.');
-          return;
-        }
-      }
-
       const idleBox = document.getElementById('camera-idle-content');
       const loadingBox = document.getElementById('camera-loading-content');
       const previewBox = document.getElementById('camera-preview-content');
@@ -1428,6 +1419,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
         rawJsonResult = data.text;
+        if (data.demo_mode) { alert('🧪 وضع المحاكاة: نتيجة رقمية توضيحية فقط، وليست تحليلًا فعليًا للصورة أو قياسًا للوزن.'); }
       } catch (e) {
         lastError = e.message;
         console.warn('Gemini server error:', e);
@@ -1451,6 +1443,12 @@
         latestAnalysisResult = parsed;
 
         renderGeminiAnalysisResults(parsed, rawJsonResult);
+        if (parsed.demo_mode) {
+          const notice = document.createElement('div');
+          notice.setAttribute('style','padding:12px;background:#fff3cd;color:#633e03;border:2px solid #d99d22;border-radius:12px;font-weight:bold;font-size:13px;margin:10px 0;text-align:center');
+          notice.textContent = '🧪 محاكاة للعرض فقط — الأرقام افتراضية وليست ناتجة عن تحليل الصورة أو وزن المخلفات';
+          if (resultCard) { const old = resultCard.querySelector('.demo-notice'); if (old) old.remove(); notice.className = 'demo-notice'; resultCard.prepend(notice); }
+        } else if (resultCard) {const old=resultCard.querySelector('.demo-notice'); if(old) old.remove();}
 
         if (loadingBox) loadingBox.classList.add('hidden');
         if (previewBox) previewBox.classList.remove('hidden');
